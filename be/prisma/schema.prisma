@@ -1,0 +1,28 @@
+generator client {
+  provider = "go run github.com/steebchen/prisma-client-go"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int     @id @default(autoincrement())
+  username  String  @unique
+  publicKey String
+  messages  Message[]
+}
+
+model Message {
+  id              Int    @id @default(autoincrement())
+  sender          String
+  receiver        String
+  encrypted       String
+  messageHash     String
+  signatureR      String
+  signatureS      String
+  timestamp       DateTime @default(now())
+
+  user User? @relation(fields: [sender], references: [username])
+}
