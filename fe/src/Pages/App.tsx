@@ -3,11 +3,16 @@ import Navbar from "../components/Navbar";
 function App() {
   return (
     <>
-      <header>
-        <Navbar></Navbar>
-      </header>
-      <main>
-        <h1>Chat App Running</h1>
+      <main className="flex bg-amber-200 h-screen">
+        <section className="bg-amber-700 w-1/3">
+          <Navbar />
+          <section>Search Contact</section>
+          <section>Contact List</section>
+        </section>
+        <section className="bg-amber-500 w-2/3">
+          <section>Profile Receiver Information</section>
+          <section>Interface chat</section>
+        </section>
       </main>
       <footer></footer>
     </>
