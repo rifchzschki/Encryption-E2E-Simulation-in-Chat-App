@@ -12,6 +12,8 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { validateAuthForm } from "../utils/auth";
+import { authService } from "../services/auth";
+import type { AuthInput } from "../types/auth";
 
 function AuthPage() {
   const [isLogin, setIsLogin] = useState<boolean>(true);
@@ -40,11 +42,15 @@ function AuthPage() {
     return !newErrors.username && !newErrors.password;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (validate()) {
       if (!isLogin) {
         console.log("Success (register):", formValues);
         // TODO: call API register di sini
+        const authServiceInstance = new authService();
+        const res = await authServiceInstance.register(formValues as AuthInput)
+        console.log(res);
+
       } else {
         console.log("Succes (Login):", formValues);
         // TODO: call API login di sini
