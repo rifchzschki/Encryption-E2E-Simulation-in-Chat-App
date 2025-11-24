@@ -1,13 +1,21 @@
 package main
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/controllers"
+	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/services"
+	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/utils"
+)
 
 func main() {
-  router := gin.Default()
-  router.GET("/ping", func(c *gin.Context) {
-    c.JSON(200, gin.H{
-      "message": "pong",
-    })
-  })
-  router.Run() // listens on 0.0.0.0:8080
+  client := services.GetDB()
+	defer client.Prisma.Disconnect()
+
+  userService := services.NewUserService(client)
+  
+  authController := controllers.NewAuthController(userService)
+  
+  port := utils.GetEnv("PORT", "8080")
+
+  router := SetupRouter(authController)
+  router.Run(":" + port)
 }

@@ -6,15 +6,14 @@ tmp_dir = "tmp"
 
 [build]
   args_bin = []
-  bin = "./tmp/main.exe"
-  cmd = "go build -o ./tmp/main.exe ."
+  full_bin = "export $(grep -v '^#' .env | xargs); ./tmp/main"
+  cmd = "go build -o ./tmp/main ."
   delay = 1000
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []
   exclude_regex = ["_test.go"]
   exclude_unchanged = false
   follow_symlink = false
-  full_bin = ""
   include_dir = []
   include_ext = ["go", "tpl", "tmpl", "html"]
   include_file = []
@@ -45,7 +44,7 @@ tmp_dir = "tmp"
   clean_on_exit = false
 
 [proxy]
-  app_port = 0
+  app_port = 8080
   enabled = false
   proxy_port = 0
 
