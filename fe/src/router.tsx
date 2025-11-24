@@ -2,7 +2,7 @@ import { createBrowserRouter } from "react-router";
 import App from "./Pages/App";
 import ChatPage from "./Pages/ChatPage";
 import ContactPage from "./Pages/ContactPage";
-import LoginPage from "./Pages/LoginPage";
+import LoginPage from "./Pages/AuthPage";
 import RootErrorBoundary from "./components/ErrorBoundariy";
 
 const router = createBrowserRouter([
