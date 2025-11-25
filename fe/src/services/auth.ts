@@ -11,10 +11,11 @@ export class authService extends ApiClient{
     //register
     async register({username, password}: AuthInput){
         const {privateKeyHex, publicKeyHex} = await generateKeyPair(username, password);
-        console.log("Generated keys:", {privateKeyHex, publicKeyHex});
-        localStorage.setItem("privateKey", privateKeyHex)
-
-        return await this.post<CredentialInfo>("/register", {username, publicKeyHex})
+        
+        this.post<CredentialInfo>("/register", {username, publicKeyHex}).then((res) => {
+            localStorage.setItem("privateKey", privateKeyHex)
+            return res;
+        })
     }
 
 }

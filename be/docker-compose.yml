@@ -14,5 +14,36 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  app:
+    build:
+      context: .
+    container_name: chatapp_backend
+    image: localhost/chatapp-backend:dev
+    restart: always
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}?schema=public"
+      GIN_MODE: debug
+    depends_on:
+      - db
+    ports:
+      - "8080:8080"
+    working_dir: /app
+    volumes:
+      - .:/app
+      - go-mod:/go/pkg/mod
+      - go-build:/root/.cache/go-build
+    command: >
+      sh -c "
+      echo 'Waiting DB...' &&
+      sleep 4 &&
+      go run github.com/steebchen/prisma-client-go generate &&
+      go run github.com/steebchen/prisma-client-go db push &&
+      air -c .air.toml
+      "
+
 volumes:
   pgdata:
+  go-mod:
+  go-build:

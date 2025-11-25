@@ -13,7 +13,7 @@ func SetupRouter(
 	
 	router.Use(middleware.CORS())
 
-	router.GET("/health-check", func(ctx *gin.Context) {ctx.JSON(200, gin.H{"status": "ok"})})
+	router.GET("/health-check", func(ctx *gin.Context) {ctx.JSON(200, gin.H{"status": "oke"})})
 	
 	//Auth
 	authGroup := router.Group("/api")
