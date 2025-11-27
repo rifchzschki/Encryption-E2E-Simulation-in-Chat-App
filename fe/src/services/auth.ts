@@ -1,4 +1,4 @@
-import { BaseResponse } from '../types';
+import type { BaseResponse } from '../types';
 import type { AuthInput, CredentialInfo, ResponseChallenge } from '../types/auth';
 import { generateKeyPair, signNonce } from '../utils/crypto';
 import { getEnv } from '../utils/env';
