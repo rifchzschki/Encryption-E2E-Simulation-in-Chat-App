@@ -1,5 +1,5 @@
-import Navbar from "../components/Navbar";
-
+import Navbar from '../components/Navbar';
+import ChatComponent from '../components/ChatComponent';
 function App() {
   return (
     <>
@@ -10,8 +10,10 @@ function App() {
           <section>Contact List</section>
         </section>
         <section className="bg-amber-500 w-2/3">
-          <section>Profile Receiver Information</section>
-          <section>Interface chat</section>
+          {/* <section>Profile Receiver Information</section> */}
+          <section>
+            <ChatComponent />
+          </section>
         </section>
       </main>
       <footer></footer>

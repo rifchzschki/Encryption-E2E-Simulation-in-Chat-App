@@ -3,7 +3,6 @@ package services
 import (
 	"log"
 	"sync"
-	
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/prisma/db"
 )
 

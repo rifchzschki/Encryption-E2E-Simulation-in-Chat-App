@@ -37,7 +37,7 @@ func JWTAuth() gin.HandlerFunc {
 		}
 
 		claims := token.Claims.(jwt.MapClaims)
-		ctx.Set("user", claims)
+		ctx.Set("username", claims)
 
 		ctx.Next()
 	}

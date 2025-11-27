@@ -11,11 +11,13 @@ func main() {
 	defer client.Prisma.Disconnect()
 
   userService := services.NewUserService(client)
-  
+  chatService := services.NewChatService(client)
   authController := controllers.NewAuthController(userService)
+  socketController := controllers.NewSocketController(userService, chatService)
+    userController := controllers.NewUserController(userService, chatService)
   
   port := utils.GetEnv("PORT", "8080")
 
-  router := SetupRouter(authController)
+  router := SetupRouter(authController,socketController,userController)
   router.Run(":" + port)
 }
