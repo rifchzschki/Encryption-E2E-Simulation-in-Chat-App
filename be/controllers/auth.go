@@ -1,7 +1,11 @@
 package controllers
 
 import (
+	"fmt"
+	"time"
+
 	"github.com/gin-gonic/gin"
+	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/middleware"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/services"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/types"
 )
@@ -17,27 +21,93 @@ func NewAuthController(userService *services.UserService) *AuthController {
 	}
 }
 
-func (a *AuthController) Login(c *gin.Context) {
-	var payload types.AuthPayload
-
-    if err := c.ShouldBindJSON(&payload); err != nil {
-        c.JSON(400, gin.H{"error": err.Error()})
-        return
-    }
-}
-func (a *AuthController) Register(c *gin.Context) {
-	var payload types.AuthPayload
-
-    if err := c.ShouldBindJSON(&payload); err != nil {
-        c.JSON(400, gin.H{"error": err.Error()})
-        return
-    }
-
-	user, err := a.userService.CreateUser(c, payload.Username, payload.PublicKey)
-	if err != nil {
-		types.BaseResponse{}.FailResponse(c, 500, "Failed to register user", err.Error())
+func (a *AuthController) ReqChallenge(c *gin.Context) {
+	var req types.NonceChallengeRequest
+	
+	if err := c.ShouldBindQuery(&req); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
-	types.BaseResponse{}.SuccessResponse(c, "User registered successfully", user)
+	if err := a.userService.CheckUserExists(c, req.Username); err != nil {
+		types.FailResponse(c, 404, "User not found", req.Username)
+		return
+	}
+
+	nonce, err := services.GenerateNonce()
+	if err != nil {
+		types.FailResponse(c, 500, "Failed to generate nonce", err.Error())
+		return
+	}
+
+	services.StoreNonce(req.Username, nonce, 2*time.Minute)
+	fmt.Println("Init Nonce: ", nonce)
+
+	types.SuccessResponse(c, "Challenge generated", types.ChallengeResponse{Nonce: nonce})
+}
+
+func (a *AuthController) Login(c *gin.Context) {
+	var loginPayload types.LoginRequest
+
+    if err := c.ShouldBindJSON(&loginPayload); err != nil {
+        c.JSON(400, gin.H{"error": err.Error()})
+        return
+    }
+
+	publicKey, ok := a.userService.GetPublicKey(c, loginPayload.Username)
+	if !ok {
+		types.FailResponse(c, 404, "User not found", nil)
+		return
+	}
+	
+	nonce, ok := services.TakeNonce(loginPayload.Username)
+	fmt.Println("After Nonce: ", nonce)
+	if !ok {
+		types.FailResponse(c, 400, "No valid challenge found for user", nil)
+		return
+	}
+
+	valid, err := services.VerifySignature(publicKey.X, publicKey.Y, nonce, loginPayload.Signature)
+	if err != nil || !valid {
+		if(err == nil) {
+			err = fmt.Errorf("signature verification failed")
+		}
+		types.FailResponse(c, 401, "Invalid signature", err.Error())
+		return
+	}
+	fmt.Println("valid")
+
+	token, err := middleware.GenerateJWT(loginPayload.Username)
+	if err != nil {
+		types.FailResponse(c, 500, "Failed to generate token", err.Error())
+		return
+	}
+
+	c.SetCookie("auth_token", token, 900, "/", "", false, true) // 900 seconds = 15 minutes
+	
+	types.SuccessResponse(c, "Login successful", nil)
+}
+func (a *AuthController) Register(c *gin.Context) {
+	var payload types.RegisterPayload
+
+    if err := c.ShouldBindJSON(&payload); err != nil {
+        c.JSON(400, gin.H{"error": err.Error()})
+        return
+    }
+
+	user, err := a.userService.CreateUser(c, payload.Username, payload.PublicKeyHex)
+	if err != nil {
+		types.FailResponse(c, 500, "Failed to register user", err.Error())
+		return
+	}
+
+	token, err := middleware.GenerateJWT(user.Username)
+	if err != nil {
+		types.FailResponse(c, 500, "Failed to generate token", err.Error())
+		return
+	}
+	
+	c.SetCookie("auth_token", token, 900, "/", "", false, true) // 900 seconds = 15 minutes
+
+	types.SuccessResponse(c, "User registered successfully", user)
 }

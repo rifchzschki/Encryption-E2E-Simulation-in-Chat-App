@@ -3,6 +3,7 @@ package middleware
 import (
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -14,7 +15,7 @@ func JWTAuth() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		auth := ctx.GetHeader("Authorization")
 		if !strings.HasPrefix(auth, "Bearer ") {
-			types.BaseResponse{}.FailResponse(ctx, http.StatusUnauthorized, "Missing or malformed token", nil)
+			types.FailResponse(ctx, http.StatusUnauthorized, "Missing or malformed token", nil)
 			ctx.Abort()
 			return
 		}
@@ -31,7 +32,7 @@ func JWTAuth() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
-			types.BaseResponse{}.FailResponse(ctx, http.StatusUnauthorized, "Invalid or expired token", err.Error())
+			types.FailResponse(ctx, http.StatusUnauthorized, "Invalid or expired token", err.Error())
 			ctx.Abort()
 			return
 		}
@@ -41,4 +42,16 @@ func JWTAuth() gin.HandlerFunc {
 
 		ctx.Next()
 	}
+}
+
+func GenerateJWT(username string) (string, error) {
+	secret := []byte(utils.GetEnv("JWT_SECRET","default_secret_key"))
+
+	claims := jwt.MapClaims{
+		"username": username,
+		"exp": time.Now().Add(time.Minute * 15).Unix(),
+	}
+	
+	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
+	return token.SignedString(secret)
 }

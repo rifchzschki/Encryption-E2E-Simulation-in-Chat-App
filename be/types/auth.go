@@ -1,6 +1,29 @@
 package types
 
-type AuthPayload struct{
+type RegisterPayload struct{
 	Username string `json:"username"`
-	PublicKey string `json:"publicKeyHex"`
+	PublicKeyHex PublicKey `json:"publicKeyHex"`
+}
+
+type PublicKey struct{
+	X string `json:"x"`
+	Y string `json:"y"`
+}
+
+type LoginRequest struct {
+	Username string `json:"username"`
+	Signature Signature `json:"signature"`
+}
+
+type Signature struct {
+	R string `json:"r"`
+	S string `json:"s"`
+}
+
+type NonceChallengeRequest struct{
+	Username string `form:"username" json:"username" binding:"required"`
+}
+
+type ChallengeResponse struct{
+	Nonce string `json:"nonce"`
 }

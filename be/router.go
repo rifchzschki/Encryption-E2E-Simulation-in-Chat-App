@@ -19,6 +19,7 @@ func SetupRouter(
 	authGroup := router.Group("/api")
 	{
 		authGroup.POST("/login", authController.Login)
+		authGroup.GET("/nonce", authController.ReqChallenge)
 		authGroup.POST("/register", authController.Register)
 	}
 

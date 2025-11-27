@@ -54,6 +54,9 @@ function AuthPage() {
       } else {
         console.log("Succes (Login):", formValues);
         // TODO: call API login di sini
+        const authServiceInstance = new authService();
+        const res = await authServiceInstance.login(formValues as AuthInput)
+        console.log(res);
       }
     }
   };
