@@ -1,6 +1,6 @@
 package types
 
-type RegisterPayload struct{
+type IdentityPayload struct{
 	Username string `json:"username"`
 	PublicKeyHex PublicKey `json:"publicKeyHex"`
 }
@@ -26,4 +26,9 @@ type NonceChallengeRequest struct{
 
 type ChallengeResponse struct{
 	Nonce string `json:"nonce"`
+}
+
+type PublicKeyResponse struct {
+    Username     string `json:"username"`
+    PublicKeyPem string `json:"public_key_pem"`
 }

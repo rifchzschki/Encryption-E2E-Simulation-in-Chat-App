@@ -54,14 +54,13 @@ func (a *AuthController) Login(c *gin.Context) {
         return
     }
 
-	publicKey, ok := a.userService.GetPublicKey(c, loginPayload.Username)
-	if !ok {
-		types.FailResponse(c, 404, "User not found", nil)
+	publicKey, err := a.userService.GetPublicKey(c, loginPayload.Username)
+	if err != nil {
+		types.FailResponse(c, 404, "User not found", err.Error())
 		return
 	}
 	
 	nonce, ok := services.TakeNonce(loginPayload.Username)
-	fmt.Println("After Nonce: ", nonce)
 	if !ok {
 		types.FailResponse(c, 400, "No valid challenge found for user", nil)
 		return
@@ -88,7 +87,7 @@ func (a *AuthController) Login(c *gin.Context) {
 	types.SuccessResponse(c, "Login successful", nil)
 }
 func (a *AuthController) Register(c *gin.Context) {
-	var payload types.RegisterPayload
+	var payload types.IdentityPayload
 
     if err := c.ShouldBindJSON(&payload); err != nil {
         c.JSON(400, gin.H{"error": err.Error()})

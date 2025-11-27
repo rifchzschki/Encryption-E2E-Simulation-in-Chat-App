@@ -1,14 +1,54 @@
-export default function TypingBox() {
+import { useState } from 'react'
+import { hashMessage, importPrivateKey, signHash, eccEncrypt } from '../utils/crypto'
+import { sendRaw } from '../services/chatSocket'
+import type { TypingBoxProps } from '../types/chat'
+
+export default function TypingBox({ me, to, onLocalAppend }: TypingBoxProps) {
+  const [value, setValue] = useState('')
+  const [sending, setSending] = useState(false)
+
+  async function handleSend(e: React.FormEvent) {
+    e.preventDefault()
+    if (!value.trim() || sending) return
+    setSending(true)
+    const timestamp = new Date().toISOString()
+    const hash = hashMessage({ message: value, timestamp, sender: me, receiver: to })
+    const pem = localStorage.getItem('privateKey')
+    if (!pem) {
+      setSending(false)
+      return
+    }
+    try {
+      const priv = await importPrivateKey(pem)
+      const signature = await signHash(priv, hash)
+      const receiverPubPem = localStorage.getItem(`pubkey:${to}`) || ''
+      const encrypted = await eccEncrypt(value, receiverPubPem)
+      sendRaw({
+        sender_username: me,
+        receiver_username: to,
+        encrypted_message: encrypted,
+        message_hash: hash,
+        signature,
+        timestamp,
+      })
+      onLocalAppend?.(value)
+      setValue('')
+    } finally {
+      setSending(false)
+    }
+  }
+
   return (
-    <div className="flex flex-row items-center mx-4 mb-2 py-2 border-1 border-black rounded-lg border-gray-300 ">
+    <form onSubmit={handleSend} className="p-2 border-t flex gap-2 bg-gray-50">
       <input
-        type="text"
-        placeholder="Type your message..."
-        className="p-4 mx-4 flex-1 focus:outline-none focus:ring-0 focus:border-gray-300"
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        placeholder="Type message..."
+        className="flex-1 px-3 py-2 text-sm border rounded focus:outline-none focus:ring focus:ring-blue-300"
       />
-      <button className="bg-blue-500 text-white p-2 mx-2 rounded-lg">
-        Send
+      <button type="submit" disabled={!value.trim() || sending} className="px-4 py-2 text-sm rounded bg-blue-600 text-white disabled:opacity-50">
+        {sending ? 'Sending...' : 'Send'}
       </button>
-    </div>
-  );
+    </form>
+  )
 }

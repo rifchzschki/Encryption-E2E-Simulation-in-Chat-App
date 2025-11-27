@@ -36,15 +36,15 @@ func (us *UserService) CheckUserExists(ctx *gin.Context, username string) error 
 	return err
 }
 
-func (us *UserService) GetPublicKey(ctx *gin.Context, username string) (types.PublicKey, bool) {
+func (us *UserService) GetPublicKey(ctx *gin.Context, username string) (types.PublicKey, error) {
 	user, err := us.prismaClient.User.FindUnique(
 		db.User.Username.Equals(username),
 	).Exec(ctx)
 	if err != nil {
-		return types.PublicKey{}, false
+		return types.PublicKey{}, err
 	}
 	return types.PublicKey{
 		X: user.PublicKeyX,
 		Y: user.PublicKeyY,
-	}, true
+	}, nil
 }

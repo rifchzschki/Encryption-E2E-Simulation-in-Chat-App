@@ -1,6 +1,6 @@
 import { createBrowserRouter } from "react-router";
 import App from "./Pages/App";
-import ChatPage from "./Pages/ChatPage";
+// import ChatPage from "./Pages/ChatPage";
 import ContactPage from "./Pages/ContactPage";
 import LoginPage from "./Pages/AuthPage";
 import RootErrorBoundary from "./components/ErrorBoundariy";
@@ -20,11 +20,6 @@ const router = createBrowserRouter([
     path: "/login",
     ErrorBoundary: RootErrorBoundary,
     element: <LoginPage />,
-  },
-  {
-    path: "/chat/:contactId",
-    ErrorBoundary: RootErrorBoundary,
-    element: <ChatPage />,
   },
 ]);
 
