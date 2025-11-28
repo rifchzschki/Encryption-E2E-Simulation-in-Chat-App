@@ -29,6 +29,7 @@ export interface VerifiedChatMessage {
 export interface ChatBoxProps {
     me: string;
     to?: string;
+    token?: string;
 }
 
 export interface ChatBubbleProps {

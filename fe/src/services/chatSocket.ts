@@ -1,13 +1,14 @@
 import type { OutgoingSignedEncryptedPayload, VerifiedChatMessage, IncomingPayload } from '../types/chat'
 import { eccDecrypt, hashMessage, importPublicKey, verifySignature, toHex } from '../utils/crypto'
 import { UserApi } from './user'
+import { useAuth } from '../context/AuthContext'
 
 let ws: WebSocket | null = null
 const listeners: ((m: VerifiedChatMessage) => void)[] = []
 
-export function initChatSocket(token: string) {
+export function initChatSocket(token?: string) {
   if (ws && ws.readyState === WebSocket.OPEN) return ws
-  ws = new WebSocket(`${import.meta.env.VITE_WS_BASE_URL}/ws/chat?token=${token}`)
+  ws = new WebSocket(`${import.meta.env.VITE_API_BASE_URL}/ws/chat?token=${token}`)
   ws.onmessage = async ev => {
     try {
       const data: IncomingPayload = JSON.parse(ev.data)
@@ -60,7 +61,7 @@ export function sendChatPayload(payload: OutgoingSignedEncryptedPayload) {
 }
 
 export async function fetchChatHistory(receiverUsername: string): Promise<VerifiedChatMessage[]> {
-  const token = localStorage.getItem('authToken') || ''
+  const {token} = useAuth()
   const res = await fetch(`${import.meta.env.VITE_PROTECTED_BASE_URL}/history/${receiverUsername}`, {
     headers: { Authorization: `Bearer ${token}` },
   })

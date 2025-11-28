@@ -4,9 +4,10 @@ import TypingBox from './TypingBox';
 import { initChatSocket, onIncomingMessage } from '../services/chatSocket';
 import { fetchChatHistory } from '../services/chatSocket';
 import type { VerifiedChatMessage,ChatBoxProps } from '../types/chat';
+import { useAuth } from '../context/AuthContext';
 
 
-export default function ChatBox({ me, to = 'bob' }: ChatBoxProps) {
+export default function ChatBox({ me, to = 'bob', token }: ChatBoxProps) {
   const [messages, setMessages] = useState<VerifiedChatMessage[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -21,8 +22,7 @@ export default function ChatBox({ me, to = 'bob' }: ChatBoxProps) {
 
   
   useEffect(() => {
-    const token = localStorage.getItem('authToken') || '';
-    initChatSocket(token);
+    initChatSocket(token?.toString());
     const off = onIncomingMessage((msg) => {
       
       if (
