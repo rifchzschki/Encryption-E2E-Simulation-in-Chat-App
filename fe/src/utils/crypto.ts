@@ -30,10 +30,16 @@ const p256_CURVE: WeierstrassOpts<bigint> = /* @__PURE__ */ (() => ({
   ),
 }))();
 
-export const toHex = (bytes: Uint8Array): string =>
-  Array.from(bytes)
+
+export function toHex(bytes: Uint8Array | string): string {
+  const arr =
+    typeof bytes === 'string'
+      ? new Uint8Array([...bytes].map((ch) => ch.charCodeAt(0)))
+      : bytes;
+  return Array.from(arr)
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
+}
 
 const fromHex = (hex: string): Uint8Array => {
   const bytes = new Uint8Array(hex.length / 2);
@@ -137,9 +143,10 @@ export function hashMessage(parts: {
   timestamp: string;
   sender: string;
   receiver: string;
-}): Uint8Array {
+}): string {
   const concat = `${parts.message}|${parts.timestamp}|${parts.sender}|${parts.receiver}`;
-  return sha3_256(utf8ToBytes(concat));
+  // return sha3_256(utf8ToBytes(concat));
+  return concat;
 }
 
 export async function importPrivateKey(pem: string): Promise<CryptoKey> {

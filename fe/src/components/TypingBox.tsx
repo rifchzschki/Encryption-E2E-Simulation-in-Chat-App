@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { hashMessage, importPrivateKey, signHash, eccEncrypt } from '../utils/crypto'
+import { hashMessage, importPrivateKey, signHash, signNonce, eccEncrypt } from '../utils/crypto'
 import { sendRaw } from '../services/chatSocket'
 import type { TypingBoxProps } from '../types/chat'
 
@@ -19,8 +19,7 @@ export default function TypingBox({ me, to, onLocalAppend }: TypingBoxProps) {
       return
     }
     try {
-      const priv = await importPrivateKey(pem)
-      const signature = await signHash(priv, hash)
+      const signature = await signNonce(pem, hash.toString())
       const receiverPubPem = localStorage.getItem(`pubkey:${to}`) || ''
       const encrypted = await eccEncrypt(value, receiverPubPem)
       sendRaw({
