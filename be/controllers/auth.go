@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/middleware"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/prisma/db"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/services"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/types"
@@ -15,11 +14,13 @@ import (
 type AuthController struct{
 	// services 
 	userService *services.UserService
+	authService *services.AuthService
 }
 
-func NewAuthController(userService *services.UserService) *AuthController {
+func NewAuthController(userService *services.UserService, authService *services.AuthService) *AuthController {
 	return &AuthController{
 		userService: userService,
+		authService: authService,
 	}
 }
 
@@ -56,37 +57,36 @@ func (a *AuthController) Login(c *gin.Context) {
         return
     }
 
-	publicKey, err := a.userService.GetPublicKey(c, loginPayload.Username)
+	user, err := a.userService.GetUserByUsername(c, loginPayload.Username)
 	if err != nil {
 		types.FailResponse(c, 404, "User not found", err.Error())
 		return
 	}
-	
-	nonce, ok := services.TakeNonce(loginPayload.Username)
-	if !ok {
-		types.FailResponse(c, http.StatusBadRequest, "No valid challenge found for user", nil)
-		return
-	}
 
-	valid, err := services.VerifySignature(publicKey.X, publicKey.Y, nonce, loginPayload.Signature)
-	if err != nil || !valid {
-		if(err == nil) {
-			err = fmt.Errorf("signature verification failed")
-		}
-		types.FailResponse(c, http.StatusUnauthorized, "Invalid signature", err.Error())
-		return
-	}
-	fmt.Println("valid")
+	publicKey := types.PublicKey{
+		X: user.PublicKeyX,
+		Y: user.PublicKeyY,
+	} 
 
-	token, err := middleware.GenerateJWT(loginPayload.Username)
+	refreshToken, accessToken, err := a.authService.ProcessLogin(c, user, publicKey, loginPayload)
 	if err != nil {
-		types.FailResponse(c, http.StatusInternalServerError, "Failed to generate token", err.Error())
+		types.FailResponse(c, 401, "Login failed", err.Error())
 		return
 	}
 
-	c.SetCookie("refresh_token", token, types.EXPIRATION_REFRESH_TOKEN, "/", "", false, true)
-	
-	types.SuccessResponse(c, "Login successful", nil)
+	c.SetCookie(
+		"refresh_token",
+		refreshToken,
+		int(types.EXPIRATION_REFRESH_TOKEN.Seconds()),
+		"/",
+		"",   // domain (sesuaikan)
+		true, // secure (set true di prod, bisa false di dev http)
+		true, // httpOnly
+	)
+
+	types.SuccessResponse(c, "Login successful", gin.H{
+		"access_token": accessToken,
+	})
 }
 func (a *AuthController) Register(c *gin.Context) {
 	var payload types.IdentityPayload
@@ -106,13 +106,5 @@ func (a *AuthController) Register(c *gin.Context) {
 		return
 	}
 
-	token, err := middleware.GenerateJWT(user.Username)
-	if err != nil {
-		types.FailResponse(c, http.StatusInternalServerError, "Failed to generate token", err.Error())
-		return
-	}
-	
-	c.SetCookie("auth_token", token, 900, "/", "", false, true) // 900 seconds = 15 minutes
-
-	types.SuccessResponse(c, "User registered successfully", user)
+	types.SuccessResponse(c, "User registered successfully", user.Username)
 }

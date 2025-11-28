@@ -1,17 +1,11 @@
 package services
 
 import (
-	"crypto/ecdsa"
-	"crypto/elliptic"
 	"crypto/rand"
-	"crypto/sha3"
 	"encoding/hex"
-	"fmt"
-	"math/big"
 	"sync"
 	"time"
 
-	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/types"
 )
 
 type NonceData struct {
@@ -58,43 +52,4 @@ func GenerateNonce() (string, error) {
         return "", err
     }
     return hex.EncodeToString(randomBytes), nil
-}
-
-func VerifySignature(publicKeyXHex, publicKeyYHex, message string, signatureHex types.Signature) (bool, error) {
-	rBInt := new(big.Int)
-	rBInt, ok := rBInt.SetString(signatureHex.R, 16)
-	if !ok {
-		return false, fmt.Errorf("Konversi R gagal")
-	} 
-
-	sBInt := new(big.Int)
-	sBInt, ok = sBInt.SetString(signatureHex.S, 16)
-	if !ok {
-		return false, fmt.Errorf("Konversi S gagal")
-	} 
-		
-	X := new(big.Int)
-	X, ok = X.SetString(publicKeyXHex, 16)
-	if !ok{
-		return false, fmt.Errorf("Konversi X gagal")
-	}
-
-	Y := new(big.Int)
-	Y, ok = Y.SetString(publicKeyYHex, 16)
-	if !ok {
-		return false, fmt.Errorf("Konversi Y gagal")
-	}
-
-	nonceBytes, err := hex.DecodeString(message)
-	if err != nil {
-		return false, err
-	}
-
-	hash := sha3.Sum256(nonceBytes)
-	pub := &ecdsa.PublicKey{
-		Curve: elliptic.P256(),
-		X: X,
-		Y: Y,
-	}
-	return ecdsa.Verify(pub, hash[:], rBInt, sBInt), nil
 }

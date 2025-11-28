@@ -1,5 +1,7 @@
 package types
 
+import "time"
+
 type IdentityPayload struct{
 	Username string `json:"username"`
 	PublicKeyHex PublicKey `json:"publicKeyHex"`
@@ -33,5 +35,5 @@ type PublicKeyResponse struct {
     PublicKeyPem string `json:"public_key_pem"`
 }
 
-const EXPIRATION_REFRESH_TOKEN int = 24*3600 // 1 hari
-const EXPIRATION_ACCESS_TOKEN int = 5*60 // 5 menit
+const EXPIRATION_REFRESH_TOKEN time.Duration = 24 * time.Hour // 1 hari
+const EXPIRATION_ACCESS_TOKEN time.Duration = 5 * time.Minute // 5 menit

@@ -51,9 +51,8 @@ function AuthPage() {
       if (!isLogin) {
         try {
           new authService().register(formValues as AuthInput).then((res) => {
-            setToken(res.access_token);
-            console.log('redirect anjing1');
-            navigate('/');
+            setIsLogin(true);
+            console.log(`Registrasi ${res} berhasil, silakan login`);
           });
         } catch (err) {
           console.error(err); // harusnya nanti pakai modal atau toast
@@ -61,8 +60,8 @@ function AuthPage() {
       } else {
         try {
           new authService().login(formValues as AuthInput).then((res) => {
+            console.log('Login berhasil');
             setToken(res.access_token);
-            console.log('redirect anjing2');
             navigate('/');
           });
         } catch (err) {

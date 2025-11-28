@@ -48,3 +48,16 @@ func (us *UserService) GetPublicKey(ctx *gin.Context, username string) (types.Pu
 		Y: user.PublicKeyY,
 	}, nil
 }
+
+func (us *UserService) GetUserByUsername(ctx *gin.Context, username string) (*db.UserModel, error) {
+	user, err := us.prismaClient.User.FindUnique(
+		db.User.Username.Equals(username),
+	).Exec(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+
+

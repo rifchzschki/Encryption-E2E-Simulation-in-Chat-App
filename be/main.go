@@ -27,7 +27,8 @@ func main() {
 
   userService := services.NewUserService(client)
   chatService := services.NewChatService(client)
-  authController := controllers.NewAuthController(userService)
+  authService := services.NewAuthService(client)
+  authController := controllers.NewAuthController(userService, authService)
   socketController := controllers.NewSocketController(userService, chatService)
     userController := controllers.NewUserController(userService, chatService)
   
