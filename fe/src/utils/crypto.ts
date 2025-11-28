@@ -62,7 +62,7 @@ async function kdfArgon2(
 
   const key = argon2id(password, salt, {
     t: 3,
-    m: 64 * 1024,
+    m: 16 * 1024,
     p: 1,
     dkLen: 32,
   });
@@ -74,11 +74,12 @@ export async function generateKeyPair(
   username: string,
   password: string
 ): Promise<KeyPair> {
+  const currentTime = Date.now();
   const kdfKey = await kdfArgon2(username, password);
+  console.log('KDF time:', Date.now() - currentTime);
   const privKey = kdfKey;
   const Point = weierstrass(p256_CURVE);
   const pubKey = Point.BASE.multiply(Point.Fn.fromBytes(privKey));
-
   return {
     privateKeyHex: toHex(privKey),
     publicKeyHex: {

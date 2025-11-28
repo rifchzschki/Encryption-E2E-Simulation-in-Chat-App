@@ -34,7 +34,9 @@ export class AuthService extends ApiClient {
       );
       const nonce = nonceRes.data.nonce;
       const { privateKeyHex } = await generateKeyPair(username, password);
+      const currentTime = Date.now();
       const signature = await signNonce(privateKeyHex, nonce);
+      console.log('Signing time:', Date.now() - currentTime);
       return this.post<BaseResponse<AuthResponse>>(
         '/login',
         { username, signature: signature },
