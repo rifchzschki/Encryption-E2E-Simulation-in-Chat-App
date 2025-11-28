@@ -26,7 +26,7 @@ func SetupRouter(
 		authGroup.POST("/register", authController.Register)
 	}
 
-	protected := router.Group("/protected")
+	protected := authGroup.Group("/protected")
 	protected.Use(middleware.JWTAuth())
 	{
 		protected.GET("/profile", func(ctx *gin.Context){
