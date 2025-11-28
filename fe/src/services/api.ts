@@ -1,8 +1,6 @@
 import axios from "axios";
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import type { Token } from "../types/auth";
-import { use } from "react";
-import { useNotificationStore } from "../stores/useNotificationStore";
 
 export abstract class ApiClient {
   protected readonly client: AxiosInstance;
