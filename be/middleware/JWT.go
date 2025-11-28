@@ -44,12 +44,12 @@ func JWTAuth() gin.HandlerFunc {
 	}
 }
 
-func GenerateJWT(username string) (string, error) {
+func GenerateJWT(username string, expiration int) (string, error) {
 	secret := []byte(utils.GetEnv("JWT_SECRET","default_secret_key"))
 
 	claims := jwt.MapClaims{
 		"username": username,
-		"exp": time.Now().Add(time.Minute * 15).Unix(),
+		"exp": expiration,
 	}
 	
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)

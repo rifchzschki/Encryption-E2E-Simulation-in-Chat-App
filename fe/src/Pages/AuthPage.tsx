@@ -1,4 +1,4 @@
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import {
   Box,
   Button,
@@ -9,30 +9,34 @@ import {
   InputLabel,
   OutlinedInput,
   Typography,
-} from "@mui/material";
-import { useState } from "react";
-import { validateAuthForm } from "../utils/auth";
-import { authService } from "../services/auth";
-import type { AuthInput } from "../types/auth";
+} from '@mui/material';
+import { useState } from 'react';
+import { useNavigate } from 'react-router';
+import { useAuth } from '../context/AuthContext';
+import { authService } from '../services/auth';
+import type { AuthInput } from '../types/auth';
+import { validateAuthForm } from '../utils/auth';
 
 function AuthPage() {
   const [isLogin, setIsLogin] = useState<boolean>(true);
+  const navigate = useNavigate();
+  const { setToken } = useAuth();
 
   const [formValues, setFormValues] = useState({
-    username: "",
-    password: "",
+    username: '',
+    password: '',
   });
 
   const [errors, setErrors] = useState({
-    username: "",
-    password: "",
+    username: '',
+    password: '',
   });
 
   const [showPassword, setShowPassword] = useState(false);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
-  const handleChange = (key: "username" | "password", value: string) => {
+  const handleChange = (key: 'username' | 'password', value: string) => {
     setFormValues((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -45,18 +49,25 @@ function AuthPage() {
   const handleSubmit = async () => {
     if (validate()) {
       if (!isLogin) {
-        console.log("Success (register):", formValues);
-        // TODO: call API register di sini
-        const authServiceInstance = new authService();
-        const res = await authServiceInstance.register(formValues as AuthInput)
-        console.log(res);
-
+        try {
+          new authService().register(formValues as AuthInput).then((res) => {
+            setToken(res.access_token);
+            console.log('redirect anjing1');
+            navigate('/');
+          });
+        } catch (err) {
+          console.error(err); // harusnya nanti pakai modal atau toast
+        }
       } else {
-        console.log("Succes (Login):", formValues);
-        // TODO: call API login di sini
-        const authServiceInstance = new authService();
-        const res = await authServiceInstance.login(formValues as AuthInput)
-        console.log(res);
+        try {
+          new authService().login(formValues as AuthInput).then((res) => {
+            setToken(res.access_token);
+            console.log('redirect anjing2');
+            navigate('/');
+          });
+        } catch (err) {
+          console.error(err); // harusnya nanti pakai modal atau toast
+        }
       }
     }
   };
@@ -72,22 +83,22 @@ function AuthPage() {
         <Card
           sx={{
             padding: 4,
-            width: "100%",
+            width: '100%',
             maxWidth: 380,
             borderRadius: 3,
           }}
         >
           <Typography variant="h5" textAlign="center" mb={2} fontWeight="bold">
-            {isLogin ? "Login" : "Register"}
+            {isLogin ? 'Login' : 'Register'}
           </Typography>
 
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <FormControl variant="outlined" fullWidth error={!!errors.username}>
               <InputLabel>Username</InputLabel>
               <OutlinedInput
                 type="text"
                 value={formValues.username}
-                onChange={(e) => handleChange("username", e.target.value)}
+                onChange={(e) => handleChange('username', e.target.value)}
                 label="Username"
                 autoComplete="username"
               />
@@ -101,10 +112,10 @@ function AuthPage() {
             <FormControl variant="outlined" fullWidth error={!!errors.password}>
               <InputLabel>Password</InputLabel>
               <OutlinedInput
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 value={formValues.password}
-                onChange={(e) => handleChange("password", e.target.value)}
-                autoComplete={isLogin ? "current-password" : "new-password"}
+                onChange={(e) => handleChange('password', e.target.value)}
+                autoComplete={isLogin ? 'current-password' : 'new-password'}
                 endAdornment={
                   <InputAdornment position="end">
                     <IconButton
@@ -126,16 +137,16 @@ function AuthPage() {
             </FormControl>
 
             <Button variant="contained" fullWidth onClick={handleSubmit}>
-              {isLogin ? "Masuk" : "Daftar"}
+              {isLogin ? 'Masuk' : 'Daftar'}
             </Button>
 
             <Typography
               textAlign="center"
               variant="body2"
-              sx={{ cursor: "pointer" }}
+              sx={{ cursor: 'pointer' }}
               onClick={() => setIsLogin((prev) => !prev)}
             >
-              {isLogin ? "Belum punya akun? Daftar" : "Sudah punya akun? Login"}
+              {isLogin ? 'Belum punya akun? Daftar' : 'Sudah punya akun? Login'}
             </Typography>
           </Box>
         </Card>

@@ -32,3 +32,6 @@ type PublicKeyResponse struct {
     Username     string `json:"username"`
     PublicKeyPem string `json:"public_key_pem"`
 }
+
+const EXPIRATION_REFRESH_TOKEN int = 24*3600 // 1 hari
+const EXPIRATION_ACCESS_TOKEN int = 5*60 // 5 menit

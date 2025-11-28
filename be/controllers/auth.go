@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/middleware"
+	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/prisma/db"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/services"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/types"
 )
@@ -62,7 +64,7 @@ func (a *AuthController) Login(c *gin.Context) {
 	
 	nonce, ok := services.TakeNonce(loginPayload.Username)
 	if !ok {
-		types.FailResponse(c, 400, "No valid challenge found for user", nil)
+		types.FailResponse(c, http.StatusBadRequest, "No valid challenge found for user", nil)
 		return
 	}
 
@@ -71,18 +73,18 @@ func (a *AuthController) Login(c *gin.Context) {
 		if(err == nil) {
 			err = fmt.Errorf("signature verification failed")
 		}
-		types.FailResponse(c, 401, "Invalid signature", err.Error())
+		types.FailResponse(c, http.StatusUnauthorized, "Invalid signature", err.Error())
 		return
 	}
 	fmt.Println("valid")
 
 	token, err := middleware.GenerateJWT(loginPayload.Username)
 	if err != nil {
-		types.FailResponse(c, 500, "Failed to generate token", err.Error())
+		types.FailResponse(c, http.StatusInternalServerError, "Failed to generate token", err.Error())
 		return
 	}
 
-	c.SetCookie("auth_token", token, 900, "/", "", false, true) // 900 seconds = 15 minutes
+	c.SetCookie("refresh_token", token, types.EXPIRATION_REFRESH_TOKEN, "/", "", false, true)
 	
 	types.SuccessResponse(c, "Login successful", nil)
 }
@@ -90,19 +92,23 @@ func (a *AuthController) Register(c *gin.Context) {
 	var payload types.IdentityPayload
 
     if err := c.ShouldBindJSON(&payload); err != nil {
-        c.JSON(400, gin.H{"error": err.Error()})
-        return
-    }
+        types.FailResponse(c, http.StatusBadRequest, "Bad Request", err)
+		return
+	}
 
 	user, err := a.userService.CreateUser(c, payload.Username, payload.PublicKeyHex)
 	if err != nil {
-		types.FailResponse(c, 500, "Failed to register user", err.Error())
+		if _, ok := db.IsErrUniqueConstraint(err); ok {
+			types.FailResponse(c, http.StatusConflict, "Email already registered", err)
+			return
+		}
+		types.FailResponse(c, http.StatusInternalServerError, "Failed to register user", err.Error())
 		return
 	}
 
 	token, err := middleware.GenerateJWT(user.Username)
 	if err != nil {
-		types.FailResponse(c, 500, "Failed to generate token", err.Error())
+		types.FailResponse(c, http.StatusInternalServerError, "Failed to generate token", err.Error())
 		return
 	}
 	

@@ -3,13 +3,10 @@ import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 
 export abstract class ApiClient {
   protected readonly client: AxiosInstance;
-  private token?: string;
 
   constructor(
     baseURL: string,
-    token?: string
   ) {
-    this.token = localStorage.getItem("Access_token");
     this.client = axios.create({
       baseURL,
       timeout: 5000, // default timeout
@@ -21,15 +18,13 @@ export abstract class ApiClient {
     this.setupInterceptors();
   }
 
-  setToken(token: string) {
-    this.token = token;
-  }
 
   private setupInterceptors() {
+    const token = localStorage.getItem("access_token");
     this.client.interceptors.request.use(
       (config) => {
-        if (this.token) {
-          config.headers.Authorization = `Bearer ${this.token}`;
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
         }
         return config;
       },

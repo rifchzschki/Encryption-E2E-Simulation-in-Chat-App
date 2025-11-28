@@ -1,4 +1,3 @@
-import { Token } from "@mui/icons-material";
 import React, { createContext, useContext, useState } from "react";
 
 type AuthContextType ={
@@ -20,7 +19,7 @@ export function AuthProvider({children}: {children: React.ReactNode}){
     const value: AuthContextType ={
         token,
         setToken,
-        isAuthenticated: !!Token,
+        isAuthenticated: !!token,
         logout
     }
     return (

@@ -8,22 +8,48 @@ datasource db {
 }
 
 model User {
-  id        Int     @id @default(autoincrement())
-  username  String  @unique
+  id        String        @id @default(uuid())
+  username  String        @unique
   publicKeyX String
   publicKeyY String
-  messages  Message[]
+
+  sessions  UserSession[]
+  sent      Message[]   @relation("SentMessages")
+  received  Message[]   @relation("ReceivedMessages")
+
+  @@map("users")
+}
+
+model UserSession {
+  id                String   @id @default(uuid())
+  user_id           String
+  refreshTokenHash  String
+  userAgent         String?
+  ipAddress         String?
+  createdAt         DateTime @default(now())
+  expiresAt         DateTime
+  isRevoked         Boolean  @default(false)
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("user_sessions")
 }
 
 model Message {
-  id              Int    @id @default(autoincrement())
-  sender          String
-  receiver        String
-  encrypted       String
-  messageHash     String
-  signatureR      String
-  signatureS      String
-  timestamp       DateTime @default(now())
+  id         Int      @id @default(autoincrement())
+  senderId   String
+  receiverId String
+  chipertext  String
+  messageHash String
+  signatureR  String
+  signatureS  String
+  timestamp   DateTime @default(now())
 
-  user User? @relation(fields: [sender], references: [username])
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+
+  @@index([senderId])
+  @@index([receiverId])
+  @@map("messages")
 }
