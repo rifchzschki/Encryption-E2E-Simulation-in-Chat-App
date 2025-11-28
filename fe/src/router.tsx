@@ -1,23 +1,23 @@
-import { createBrowserRouter } from "react-router";
-import App from "./Pages/App";
+import { createBrowserRouter } from 'react-router';
+import App from './Pages/App';
 // import ChatPage from "./Pages/ChatPage";
-import ContactPage from "./Pages/ContactPage";
-import LoginPage from "./Pages/AuthPage";
-import RootErrorBoundary from "./components/ErrorBoundariy";
+import ContactPage from './Pages/ContactPage';
+import LoginPage from './Pages/AuthPage';
+import RootErrorBoundary from './components/ErrorBoundariy';
 
 const router = createBrowserRouter([
   {
-    path: "/",
+    path: '/',
     ErrorBoundary: RootErrorBoundary,
     element: <App />,
   },
   {
-    path: "/contacts",
+    path: '/contacts',
     ErrorBoundary: RootErrorBoundary,
     element: <ContactPage />,
   },
   {
-    path: "/login",
+    path: '/login',
     ErrorBoundary: RootErrorBoundary,
     element: <LoginPage />,
   },
