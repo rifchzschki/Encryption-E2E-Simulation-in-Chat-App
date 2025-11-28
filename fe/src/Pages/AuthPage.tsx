@@ -1,5 +1,6 @@
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -10,7 +11,7 @@ import {
   OutlinedInput,
   Typography,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/auth';
@@ -21,6 +22,19 @@ function AuthPage() {
   const [isLogin, setIsLogin] = useState<boolean>(true);
   const navigate = useNavigate();
   const { setToken } = useAuth();
+  const [alert, setAlert] = useState<{
+    message: string;
+    severity: 'success' | 'error' | null;
+  }>({
+    message: '',
+    severity: null,
+  });
+
+  useEffect(() => {
+    if (!alert.severity) return;
+    const t = setTimeout(() => setAlert({ message: '', severity: null }), 3000);
+    return () => clearTimeout(t);
+  }, [alert]);
 
   const [formValues, setFormValues] = useState({
     username: '',
@@ -51,8 +65,11 @@ function AuthPage() {
       if (!isLogin) {
         try {
           new authService().register(formValues as AuthInput).then((res) => {
+            setAlert({
+              message: `Registrasi ${res} berhasil, silakan login!`,
+              severity: 'success',
+            });
             setIsLogin(true);
-            console.log(`Registrasi ${res} berhasil, silakan login`);
           });
         } catch (err) {
           console.error(err); // harusnya nanti pakai modal atau toast
@@ -62,6 +79,10 @@ function AuthPage() {
           new authService().login(formValues as AuthInput).then((res) => {
             console.log('Login berhasil');
             setToken(res.access_token);
+            setAlert({
+              message: 'Login berhasil!',
+              severity: 'success',
+            });
             navigate('/');
           });
         } catch (err) {
@@ -73,6 +94,11 @@ function AuthPage() {
 
   return (
     <div className="flex h-screen flex-col lg:flex-row">
+      {alert.severity && (
+        <Alert severity={alert.severity} sx={{ mt: 2 }}>
+          {alert.message}
+        </Alert>
+      )}
       <section className="flex items-center justify-center w-0 lg:w-3/5 bg-gray-300">
         <figure className="">
           <img src="/transparent-logo.png" alt="logo" />

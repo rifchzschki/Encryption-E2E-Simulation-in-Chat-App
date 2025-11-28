@@ -1,5 +1,5 @@
 import type { BaseResponse } from '../types';
-import type { AuthInput, AuthResponse, CredentialInfo, ResponseChallenge } from '../types/auth';
+import type { AuthInput, AuthResponse, ResponseChallenge } from '../types/auth';
 import { generateKeyPair, signNonce } from '../utils/crypto';
 import { getEnv } from '../utils/env';
 import { ApiClient } from './api';

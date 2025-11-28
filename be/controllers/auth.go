@@ -68,7 +68,7 @@ func (a *AuthController) Login(c *gin.Context) {
 		Y: user.PublicKeyY,
 	} 
 
-	refreshToken, accessToken, err := a.authService.ProcessLogin(c, user, publicKey, loginPayload)
+	accessToken, refreshToken, err := a.authService.ProcessLogin(c, user, publicKey, loginPayload)
 	if err != nil {
 		types.FailResponse(c, 401, "Login failed", err.Error())
 		return
