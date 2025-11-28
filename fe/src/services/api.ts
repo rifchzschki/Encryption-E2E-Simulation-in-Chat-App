@@ -1,30 +1,32 @@
 import axios from "axios";
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import type { Token } from "../types/auth";
 
 export abstract class ApiClient {
   protected readonly client: AxiosInstance;
+  protected token: Token;
 
   constructor(
     baseURL: string,
+    token: Token
   ) {
     this.client = axios.create({
       baseURL,
-      timeout: 5000, // default timeout
+      timeout: 5000,
       headers: {
         "Content-Type": "application/json",
       },
     });
-
+    this.token = token;
     this.setupInterceptors();
   }
 
 
   private setupInterceptors() {
-    const token = localStorage.getItem("access_token");
     this.client.interceptors.request.use(
       (config) => {
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        if (this.token) {
+          config.headers.Authorization = `Bearer ${this.token}`;
         }
         return config;
       },

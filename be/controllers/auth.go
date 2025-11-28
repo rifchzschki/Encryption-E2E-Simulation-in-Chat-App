@@ -86,6 +86,7 @@ func (a *AuthController) Login(c *gin.Context) {
 
 	types.SuccessResponse(c, "Login successful", gin.H{
 		"access_token": accessToken,
+		"username":     user.Username,
 	})
 }
 func (a *AuthController) Register(c *gin.Context) {

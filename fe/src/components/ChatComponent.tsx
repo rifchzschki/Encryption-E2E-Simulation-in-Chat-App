@@ -1,21 +1,15 @@
-import { useEffect, useState } from 'react';
 import ChatBox from './ChatBox';
-import { fetchMe } from '../services/user';
+import { useAuth } from '../context/AuthContext';
 
 export default function ChatComponent() {
-    const [me, setMe] = useState('loading...');
-    useEffect(() => {
-        fetchMe()
-        .then((d) => setMe(d.username))
-        .catch(() => setMe('anonymous'));
-    }, []);
+    const { username } = useAuth();
     return (
-        <div className="flex flex-col border rounded-md bg-white h-[100vh]">
+        <div className="flex flex-col border rounded-md bg-white h-screen">
         <header className="p-2 border-b">
-            <h2 className="text-lg font-semibold">Chat ({me})</h2>
+            <h2 className="text-lg font-semibold">Chat ({username})</h2>
         </header>
         <div className="flex-1 min-h-0">
-            <ChatBox me={me} />
+            <ChatBox me={username as string} />
         </div>
         </div>
     );

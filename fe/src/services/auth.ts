@@ -1,12 +1,12 @@
 import type { BaseResponse } from '../types';
-import type { AuthInput, AuthResponse, ResponseChallenge } from '../types/auth';
+import type { AuthInput, AuthResponse, ResponseChallenge, Token } from '../types/auth';
 import { generateKeyPair, signNonce } from '../utils/crypto';
 import { getEnv } from '../utils/env';
 import { ApiClient } from './api';
 
-export class authService extends ApiClient {
-  constructor() {
-    super(getEnv('VITE_API_BASE_URL', 'http:/localhost:8080/api/'));
+export class AuthService extends ApiClient {
+  constructor(token: Token) {
+    super(getEnv('VITE_API_BASE_URL', 'http:/localhost:8080/api/'), token);
   }
 
   //register

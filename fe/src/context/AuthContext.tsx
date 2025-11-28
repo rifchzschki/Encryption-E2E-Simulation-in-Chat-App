@@ -1,8 +1,11 @@
 import React, { createContext, useContext, useState } from "react";
+import type { Token } from "../types/auth";
 
 type AuthContextType ={
-    token: string|null
-    setToken: (t: string|null)=>void;
+    token: Token;
+    username: string | null;
+    setUsername: (username: string | null) => void;
+    setToken: (t: Token)=>void;
     isAuthenticated: boolean;
     logout: ()=>void;
 }
@@ -10,14 +13,17 @@ type AuthContextType ={
 const AuthContext = createContext<AuthContextType|undefined>(undefined);
 
 export function AuthProvider({children}: {children: React.ReactNode}){
-    const [token, setToken] = useState<string|null>(null)
-
+    const [token, setToken] = useState<Token>(null)
+    const [username, setUsername] = useState<string | null>(null);
     function logout(){
         setToken(null)
+        setUsername(null);
     }
 
     const value: AuthContextType ={
         token,
+        username,
+        setUsername,
         setToken,
         isAuthenticated: !!token,
         logout

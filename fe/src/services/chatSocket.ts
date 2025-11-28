@@ -1,6 +1,6 @@
 import type { OutgoingSignedEncryptedPayload, VerifiedChatMessage, IncomingPayload } from '../types/chat'
 import { eccDecrypt, hashMessage, importPublicKey, verifySignature, toHex } from '../utils/crypto'
-import { fetchPublicKey } from './user'
+import { UserApi } from './user'
 
 let ws: WebSocket | null = null
 const listeners: ((m: VerifiedChatMessage) => void)[] = []
@@ -18,7 +18,8 @@ export function initChatSocket(token: string) {
         sender: data.sender_username,
         receiver: data.receiver_username,
       })
-      const pubRes = await fetchPublicKey(data.sender_username)
+      const userService = new UserApi(token)
+      const pubRes = await userService.fetchPublicKey(data.sender_username)
       const pubKeyPem = pubRes.public_key_pem || ''
       const pubKey = pubKeyPem ? await importPublicKey(pubKeyPem) : null
       const hashEq = toHex(recomputed) === data.message_hash
@@ -74,7 +75,8 @@ export async function fetchChatHistory(receiverUsername: string): Promise<Verifi
       sender: d.sender_username,
       receiver: d.receiver_username,
     })
-    const pubRes = await fetchPublicKey(d.sender_username)
+    const userService = new UserApi(token)
+    const pubRes = await userService.fetchPublicKey(d.sender_username)
     const pubKeyPem = pubRes.public_key_pem || ''
     const pubKey = pubKeyPem ? await importPublicKey(pubKeyPem) : null
     const hashEq = toHex(recomputed) === d.message_hash

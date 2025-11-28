@@ -34,4 +34,7 @@ export type KeyPair = {
 
 export type AuthResponse = {
   access_token: string
+  username: string
 }
+
+export type Token = string | undefined | null;

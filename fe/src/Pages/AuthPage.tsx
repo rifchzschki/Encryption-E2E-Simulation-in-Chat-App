@@ -14,14 +14,14 @@ import {
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
-import { authService } from '../services/auth';
+import { AuthService } from '../services/auth';
 import type { AuthInput } from '../types/auth';
 import { validateAuthForm } from '../utils/auth';
 
 function AuthPage() {
   const [isLogin, setIsLogin] = useState<boolean>(true);
   const navigate = useNavigate();
-  const { setToken } = useAuth();
+  const { setUsername, token, setToken } = useAuth();
   const [alert, setAlert] = useState<{
     message: string;
     severity: 'success' | 'error' | null;
@@ -62,22 +62,29 @@ function AuthPage() {
 
   const handleSubmit = async () => {
     if (validate()) {
+      const authService = new AuthService(token);
       if (!isLogin) {
         try {
-          new authService().register(formValues as AuthInput).then((res) => {
-            setAlert({
-              message: `Registrasi ${res} berhasil, silakan login!`,
-              severity: 'success',
+          authService
+            .register(formValues as AuthInput)
+            .then((res) => {
+              setUsername(res);
+              setAlert({
+                message: `Registrasi ${res} berhasil, silakan login!`,
+                severity: 'success',
+              });
+              setIsLogin(true);
             });
-            setIsLogin(true);
-          });
         } catch (err) {
-          console.error(err); // harusnya nanti pakai modal atau toast
+          setAlert({
+            message: 'Register gagal!',
+            severity: 'error',
+          });
         }
       } else {
         try {
-          new authService().login(formValues as AuthInput).then((res) => {
-            console.log('Login berhasil');
+          authService.login(formValues as AuthInput).then((res) => {
+            setUsername(res.username);
             setToken(res.access_token);
             setAlert({
               message: 'Login berhasil!',
@@ -86,7 +93,10 @@ function AuthPage() {
             navigate('/');
           });
         } catch (err) {
-          console.error(err); // harusnya nanti pakai modal atau toast
+          setAlert({
+            message: 'Login gagal!',
+            severity: 'error',
+          });
         }
       }
     }
