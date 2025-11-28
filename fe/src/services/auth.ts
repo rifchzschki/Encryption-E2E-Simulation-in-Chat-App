@@ -28,19 +28,23 @@ export class AuthService extends ApiClient {
 
   //login
   async login({ username, password }: AuthInput): Promise<AuthResponse> {
-    const nonceRes = await this.get<BaseResponse<ResponseChallenge>>(
-      `/nonce?username=${username}`
-    );
-    const nonce = nonceRes.data.nonce;
-    const { privateKeyHex } = await generateKeyPair(username, password);
-    const signature = await signNonce(privateKeyHex, nonce);
-    return this.post<BaseResponse<AuthResponse>>(
-      '/login',
-      { username, signature: signature },
-      { withCredentials: true }
-    ).then((res) => {
-      localStorage.setItem('privateKey', privateKeyHex);
-      return res.data
-    });
+    try{
+      const nonceRes = await this.get<BaseResponse<ResponseChallenge>>(
+        `/nonce?username=${username}`
+      );
+      const nonce = nonceRes.data.nonce;
+      const { privateKeyHex } = await generateKeyPair(username, password);
+      const signature = await signNonce(privateKeyHex, nonce);
+      return this.post<BaseResponse<AuthResponse>>(
+        '/login',
+        { username, signature: signature },
+        { withCredentials: true }
+      ).then((res) => {
+        localStorage.setItem('privateKey', privateKeyHex);
+        return res.data
+      });
+    }catch(err){
+      throw err;
+    }
   }
 }

@@ -1,6 +1,5 @@
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import {
-  Alert,
   Box,
   Button,
   Card,
@@ -11,10 +10,11 @@ import {
   OutlinedInput,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { AuthService } from '../services/auth';
+import { useNotificationStore } from '../stores/useNotificationStore';
 import type { AuthInput } from '../types/auth';
 import { validateAuthForm } from '../utils/auth';
 
@@ -22,19 +22,7 @@ function AuthPage() {
   const [isLogin, setIsLogin] = useState<boolean>(true);
   const navigate = useNavigate();
   const { setUsername, token, setToken } = useAuth();
-  const [alert, setAlert] = useState<{
-    message: string;
-    severity: 'success' | 'error' | null;
-  }>({
-    message: '',
-    severity: null,
-  });
-
-  useEffect(() => {
-    if (!alert.severity) return;
-    const t = setTimeout(() => setAlert({ message: '', severity: null }), 3000);
-    return () => clearTimeout(t);
-  }, [alert]);
+  const { show } = useNotificationStore();
 
   const [formValues, setFormValues] = useState({
     username: '',
@@ -64,51 +52,34 @@ function AuthPage() {
     if (validate()) {
       const authService = new AuthService(token);
       if (!isLogin) {
-        try {
-          authService
-            .register(formValues as AuthInput)
-            .then((res) => {
-              setUsername(res);
-              setAlert({
-                message: `Registrasi ${res} berhasil, silakan login!`,
-                severity: 'success',
-              });
-              setIsLogin(true);
-            });
-        } catch (err) {
-          setAlert({
-            message: 'Register gagal!',
-            severity: 'error',
+        authService
+          .register(formValues as AuthInput)
+          .then((res) => {
+            setUsername(res);
+            show('Registrasi berhasil! Silakan login.', 'success');
+            setIsLogin(true);
+          })
+          .catch((err) => {
+            show(err.message, 'error');
           });
-        }
       } else {
-        try {
-          authService.login(formValues as AuthInput).then((res) => {
+        authService
+          .login(formValues as AuthInput)
+          .then((res) => {
             setUsername(res.username);
             setToken(res.access_token);
-            setAlert({
-              message: 'Login berhasil!',
-              severity: 'success',
-            });
+            show('Login berhasil!', 'success');
             navigate('/');
+          })
+          .catch((err) => {
+            show(err.message, 'error');
           });
-        } catch (err) {
-          setAlert({
-            message: 'Login gagal!',
-            severity: 'error',
-          });
-        }
       }
     }
   };
 
   return (
     <div className="flex h-screen flex-col lg:flex-row">
-      {alert.severity && (
-        <Alert severity={alert.severity} sx={{ mt: 2 }}>
-          {alert.message}
-        </Alert>
-      )}
       <section className="flex items-center justify-center w-0 lg:w-3/5 bg-gray-300">
         <figure className="">
           <img src="/transparent-logo.png" alt="logo" />

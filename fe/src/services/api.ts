@@ -1,6 +1,8 @@
 import axios from "axios";
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
 import type { Token } from "../types/auth";
+import { use } from "react";
+import { useNotificationStore } from "../stores/useNotificationStore";
 
 export abstract class ApiClient {
   protected readonly client: AxiosInstance;
@@ -36,9 +38,6 @@ export abstract class ApiClient {
     this.client.interceptors.response.use(
       (response: AxiosResponse) => response,
       async (error) => {
-        // Example refresh-token logic hook possibility
-        // if (error.response?.status === 401) { ... retry logic }
-
         const normalized = new Error(
           error.response?.data?.message || error.message || "Request failed"
         );
