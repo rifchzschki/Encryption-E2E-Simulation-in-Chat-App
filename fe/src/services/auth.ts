@@ -1,5 +1,7 @@
+import { redirect } from 'react-router';
+import { useAuth } from '../context/AuthContext';
 import type { BaseResponse } from '../types';
-import type { AuthInput, CredentialInfo, ResponseChallenge } from '../types/auth';
+import type { AuthInput, AuthResponse, CredentialInfo, ResponseChallenge } from '../types/auth';
 import { generateKeyPair, signNonce } from '../utils/crypto';
 import { getEnv } from '../utils/env';
 import { ApiClient } from './api';
@@ -16,13 +18,15 @@ export class authService extends ApiClient {
       password
     );
 
-    this.post<CredentialInfo>(
+    this.post<BaseResponse<AuthResponse>>(
       '/register',
       { username, publicKeyHex },
       { withCredentials: true }
     ).then((res) => {
       localStorage.setItem('privateKey', privateKeyHex);
-      return res;
+      const {setToken} = useAuth();
+      setToken(res.data.access_token);
+      redirect("/")
     });
   }
 
@@ -34,13 +38,15 @@ export class authService extends ApiClient {
     const nonce = nonceRes.data.nonce;
     const { privateKeyHex } = await generateKeyPair(username, password);
     const signature = await signNonce(privateKeyHex, nonce);
-    return await this.post(
+    return await this.post<BaseResponse<AuthResponse>>(
       '/login',
       { username, signature: signature },
       { withCredentials: true }
     ).then((res) => {
       localStorage.setItem('privateKey', privateKeyHex);
-      return res;
+      const {setToken} = useAuth();
+      setToken(res.data.access_token);
+      redirect("/")
     });
   }
 }

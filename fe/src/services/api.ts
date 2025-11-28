@@ -9,7 +9,7 @@ export abstract class ApiClient {
     baseURL: string,
     token?: string
   ) {
-    this.token = token;
+    this.token = localStorage.getItem("Access_token");
     this.client = axios.create({
       baseURL,
       timeout: 5000, // default timeout

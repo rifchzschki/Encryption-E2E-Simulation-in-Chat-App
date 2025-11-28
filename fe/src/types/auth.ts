@@ -31,3 +31,7 @@ export type KeyPair = {
   privateKeyHex: string;
   publicKeyHex: PublicKey;
 };
+
+export type AuthResponse = {
+  access_token: string
+}
