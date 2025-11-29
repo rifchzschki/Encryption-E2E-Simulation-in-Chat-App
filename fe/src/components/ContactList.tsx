@@ -23,11 +23,11 @@ export default function ContactList({
       >
         <ListItemAvatar>
           <div className="mr-4">
-          <Avatar
-            src={ undefined}
-            alt={contact.username}
-            sx={{ width: 56, height: 56 }}
-          />
+            <Avatar
+              src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${contact.username}`}
+              alt={contact.username}
+              sx={{ width: 56, height: 56 }}
+            />
           </div>
         </ListItemAvatar>
         <div className="flex flex-row justify-between w-full">

@@ -1,13 +1,18 @@
+import { Add, Menu } from '@mui/icons-material';
 import SearchIcon from '@mui/icons-material/Search';
-import { Button, IconButton, TextField, Typography } from '@mui/material';
+import {
+  Button,
+  IconButton,
+  Popover,
+  TextField,
+  Typography,
+} from '@mui/material';
 import * as React from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { AuthService } from '../services/auth';
-import { useNotificationStore } from '../stores/useNotificationStore';
 import { UserApi } from '../services/user';
-import { Popover } from '@mui/material';
-import { Add, Menu } from '@mui/icons-material';
+import { useNotificationStore } from '../stores/useNotificationStore';
 
 interface ContactHeaderProps {
   searchQuery: string;
@@ -58,7 +63,8 @@ export default function ContactHeader({
         })
         .catch((err) => {
           show(err.message, 'error');
-        }).finally(() => {
+        })
+        .finally(() => {
           setLoading(false);
         });
     } catch (err: unknown) {
@@ -102,64 +108,69 @@ export default function ContactHeader({
   const id = open ? 'simple-popover' : undefined;
   return (
     <>
-      <div className="p-4 flex flex-row justify-between items-center bg-blue-200">
-        <Button onClick={handleLogout}>Logout</Button>
-
-        <figure className="flex items-center gap-3 m-0">
-          <img src="/transparent-logo.png" alt="Logo" width={50} height={50} />
-          <Typography
-            variant="h6"
-            noWrap
-            component="a"
-            href="#app-bar-with-responsive-menu"
+      <div className=" flex justify-around items-center bg-blue-200">
+        <div className="flex">
+          <IconButton
+            onClick={handleClick}
             sx={{
-              mr: 2,
-              display: { xs: 'none', md: 'flex' },
-              fontFamily: 'monospace',
-              fontWeight: 700,
-              letterSpacing: '.3rem',
-              color: 'inherit',
-              textDecoration: 'none',
+              alignSelf: 'center',
             }}
           >
-            CypherTalk
-          </Typography>
-        </figure>
-
-        <IconButton onClick={handleClick}>
-          <Menu />{' '}
+            <Menu />
+            {''}
+          </IconButton>
+          <Popover
+            id={id}
+            open={open}
+            anchorEl={anchorEl}
+            onClose={() => setAnchorEl(null)}
+            anchorOrigin={{
+              vertical: 'bottom',
+              horizontal: 'left',
+            }}
+          >
+            <div className="flex flex-col p-2">
+              <div
+                onClick={handleClickAdd}
+                className="flex flex-row gap-1 w-full items-start cursor-pointer mb-2 hover:bg-gray-100 p-1 rounded-md transition-colors duration-300 ease-in-out"
+              >
+                <Add className="text-blue-500" />
+                <Typography variant="body2" color="textPrimary">
+                  Add Contact
+                </Typography>
+              </div>
+              <Button onClick={handleLogout}>Logout</Button>
+            </div>
+          </Popover>
+          <figure className="flex items-center gap-3 m-0">
+            <img
+              src="/transparent-logo.png"
+              alt="Logo"
+              width={90}
+              height={90}
+            />
+            <Typography
+              variant="h6"
+              noWrap
+              component="a"
+              href="#app-bar-with-responsive-menu"
+              sx={{
+                mr: 2,
+                display: { xs: 'none', md: 'flex' },
+                fontFamily: 'monospace',
+                fontWeight: 700,
+                letterSpacing: '.3rem',
+                color: 'inherit',
+                textDecoration: 'none',
+              }}
+            >
+              CypherTalk
+            </Typography>
+          </figure>
+        </div>
+        <IconButton onClick={handleClickSearch}>
+          <SearchIcon className="text-blue-500" />
         </IconButton>
-        <Popover
-          id={id}
-          open={open}
-          anchorEl={anchorEl}
-          onClose={() => setAnchorEl(null)}
-          anchorOrigin={{
-            vertical: 'bottom',
-            horizontal: 'left',
-          }}
-        >
-          <div className="flex flex-col p-2">
-            <div
-              onClick={handleClickSearch}
-              className="flex flex-row gap-1 w-full items-start cursor-pointer mb-2 hover:bg-gray-100 p-1 rounded-md transition-colors duration-300 ease-in-out"
-            >
-              <SearchIcon className="text-blue-500" />
-              <Typography variant="body2" color="textPrimary">
-                Search
-              </Typography>
-            </div>
-            <div
-              onClick={handleClickAdd}
-              className="flex flex-row gap-1 w-full items-start cursor-pointer mb-2 hover:bg-gray-100 p-1 rounded-md transition-colors duration-300 ease-in-out"
-            >
-              <Add className="text-blue-500" />
-              <Typography variant="body2" color="textPrimary">
-                Add Contact
-              </Typography>
-            </div>
-          </div>
-        </Popover>
       </div>
 
       {showSearch && (
