@@ -85,9 +85,7 @@ func (u *UserController) AddFriendHandler(c *gin.Context) {
 
 	friendship, err := u.userService.AddFriend(c, r.Username, r.FriendUsername)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"error": err.Error(),
-		})
+		types.FailResponse(c, http.StatusConflict, err.Error(), err.Error())
 		return
 	}
 
@@ -102,7 +100,7 @@ func (u *UserController) GetFriendsHandler(c *gin.Context) {
 	username := c.Param("username")
 	friends, err := u.userService.GetFriends(c, username)
 	if err != nil {
-		c.JSON(http.StatusNotFound, []interface{}{})
+		types.FailResponse(c, http.StatusInternalServerError, err.Error(), err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, friends)

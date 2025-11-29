@@ -48,20 +48,26 @@ export default function ContactHeader({
     if (!newContactUsername.trim()) return;
 
     setLoading(true);
-    const userApi = new UserApi(token);
     try {
       if (!username) throw new Error('Username not found');
-      await userApi.addFriend(username, newContactUsername.trim());
-      show(`Added ${newContactUsername} as a friend`, 'success');
-      setNewContactUsername('');
-      setShowAddContact(false);
+      await new UserApi(token)
+        .addFriend(username, newContactUsername.trim())
+        .then(() => {
+          show(`Added ${newContactUsername} as a friend`, 'success');
+          setNewContactUsername('');
+          setShowAddContact(false);
+        })
+        .catch((err) => {
+          show(err.message, 'error');
+        }).finally(() => {
+          setLoading(false);
+        });
     } catch (err: unknown) {
       if (err instanceof Error) {
         show(err.message || 'Failed to add friend', 'error');
       } else {
         show('Failed to add friend', 'error');
       }
-    } finally {
       setLoading(false);
     }
   };
