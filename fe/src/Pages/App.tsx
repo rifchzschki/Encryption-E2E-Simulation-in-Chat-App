@@ -9,8 +9,7 @@ function App() {
       <main className="flex h-screen">
         <section className=" w-1/3">
           <Contacts />
-          <p>{token}</p>
-          <p>{username}</p>
+
         </section>
         <section className=" w-2/3">
           {/* <section>Profile Receiver Information</section> */}

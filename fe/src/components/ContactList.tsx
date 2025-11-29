@@ -7,7 +7,6 @@ import {
   Typography,
   Divider,
 } from '@mui/material';
-import PersonIcon from '@mui/icons-material/Person';
 
 interface ContactListProps {
   contact: { id: number; username: string; };
@@ -23,13 +22,12 @@ export default function ContactList({
         className="border-b border-gray-200 p-4 hover:bg-gray-100 transition-colors duration-300 ease-in-out"
       >
         <ListItemAvatar>
+          <div className="mr-4">
           <Avatar
             src={ undefined}
             alt={contact.username}
             sx={{ width: 56, height: 56 }}
           />
-          <div className="mr-4">
-            {<PersonIcon />} 
           </div>
         </ListItemAvatar>
         <div className="flex flex-row justify-between w-full">
