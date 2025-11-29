@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { NOTIFICATAION_DURATION } from '../types';
 
 type Severity = 'success' | 'error' | 'warning' | 'info';
 
@@ -16,7 +17,7 @@ export const useNotificationStore = create<NotificationState>((set) => ({
   message: '',
   severity: 'info',
 
-  show: (message, severity = 'info', duration = 5000) => {
+  show: (message, severity = 'info', duration = NOTIFICATAION_DURATION) => {
     set({ open: true, message, severity });
 
     setTimeout(() => set({ open: false }), duration);

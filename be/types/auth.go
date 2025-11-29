@@ -35,5 +35,5 @@ type PublicKeyResponse struct {
     PublicKeyPem string `json:"public_key_pem"`
 }
 
-const EXPIRATION_REFRESH_TOKEN time.Duration = 24 * time.Hour // 1 hari
+const EXPIRATION_REFRESH_TOKEN time.Duration = 1 * time.Hour // 1 Jam
 const EXPIRATION_ACCESS_TOKEN time.Duration = 5 * time.Minute // 5 menit

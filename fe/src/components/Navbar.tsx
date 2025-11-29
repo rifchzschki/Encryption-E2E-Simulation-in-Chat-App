@@ -1,15 +1,16 @@
-import AccountCircle from "@mui/icons-material/AccountCircle";
-import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
-import Container from "@mui/material/Container";
-import IconButton from "@mui/material/IconButton";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
-import * as React from "react";
+import AccountCircle from '@mui/icons-material/AccountCircle';
+import { Button } from '@mui/material';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import IconButton from '@mui/material/IconButton';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import * as React from 'react';
 
-const settings = ["Profile", "Daftar Kontak", "Logout"];
+const settings = ['Profile', 'Daftar Kontak', 'Logout'];
 
 function Navbar() {
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
@@ -42,12 +43,12 @@ function Navbar() {
               href="#app-bar-with-responsive-menu"
               sx={{
                 mr: 2,
-                display: { xs: "none", md: "flex" },
-                fontFamily: "monospace",
+                display: { xs: 'none', md: 'flex' },
+                fontFamily: 'monospace',
                 fontWeight: 700,
-                letterSpacing: ".3rem",
-                color: "inherit",
-                textDecoration: "none",
+                letterSpacing: '.3rem',
+                color: 'inherit',
+                textDecoration: 'none',
               }}
             >
               ChiperTalk
@@ -59,24 +60,24 @@ function Navbar() {
               <AccountCircle fontSize="large" />
             </IconButton>
             <Menu
-              sx={{ mt: "45px" }}
+              sx={{ mt: '45px' }}
               id="menu-appbar"
               anchorEl={anchorElUser}
               anchorOrigin={{
-                vertical: "top",
-                horizontal: "right",
+                vertical: 'top',
+                horizontal: 'right',
               }}
               keepMounted
               transformOrigin={{
-                vertical: "top",
-                horizontal: "right",
+                vertical: 'top',
+                horizontal: 'right',
               }}
               open={Boolean(anchorElUser)}
               onClose={handleCloseUserMenu}
             >
               {settings.map((setting) => (
                 <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  <Typography sx={{ textAlign: "center" }}>
+                  <Typography sx={{ textAlign: 'center' }}>
                     {setting}
                   </Typography>
                 </MenuItem>

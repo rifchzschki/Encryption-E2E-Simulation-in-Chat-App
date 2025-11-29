@@ -21,7 +21,7 @@ import { validateAuthForm } from '../utils/auth';
 function AuthPage() {
   const [isLogin, setIsLogin] = useState<boolean>(true);
   const navigate = useNavigate();
-  const { setUsername, token, setToken } = useAuth();
+  const { setUsername, token, setToken, setLoading } = useAuth();
   const { show } = useNotificationStore();
 
   const [formValues, setFormValues] = useState({
@@ -52,6 +52,7 @@ function AuthPage() {
     if (validate()) {
       const authService = new AuthService(token);
       if (!isLogin) {
+        setLoading(true);
         authService
           .register(formValues as AuthInput)
           .then((res) => {
@@ -61,8 +62,11 @@ function AuthPage() {
           })
           .catch((err) => {
             show(err.message, 'error');
+          }).finally(() => {
+            setLoading(false);
           });
       } else {
+        setLoading(true);
         authService
           .login(formValues as AuthInput)
           .then((res) => {
@@ -73,6 +77,9 @@ function AuthPage() {
           })
           .catch((err) => {
             show(err.message, 'error');
+          })
+          .finally(() => {
+            setLoading(false);
           });
       }
     }

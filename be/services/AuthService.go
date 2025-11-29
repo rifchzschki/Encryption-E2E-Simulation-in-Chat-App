@@ -115,3 +115,49 @@ func (as *AuthService) ProcessLogin(ctx *gin.Context, user *db.UserModel, pub ty
 
 	return accessToken, refreshToken, nil
 }
+
+func (as *AuthService) RevokeAllSessions(ctx *gin.Context, userID string) error {
+	_, err := as.prismaClient.UserSession.FindMany(
+		db.UserSession.UserID.Equals(userID),
+	).Update(
+		db.UserSession.IsRevoked.Set(true),
+	).Exec(ctx)
+
+	return err
+}
+
+func (as *AuthService) RevokeSession(ctx *gin.Context, session *db.UserSessionModel) error {
+	_, err := as.prismaClient.UserSession.FindUnique(
+		db.UserSession.ID.Equals(session.ID),
+	).Update(
+		db.UserSession.IsRevoked.Set(true),
+	).Exec(ctx)
+	return err
+}
+
+func (as *AuthService) VerifyRefreshTokenAndSession(ctx *gin.Context, tokenStr string) (*middleware.RefreshTokenClaims, *db.UserSessionModel, error) {
+	claims, err := middleware.VerifyRefreshToken(tokenStr)
+	if err != nil {
+		return nil, nil, fmt.Errorf("invalid refresh token: %w", err)
+	}
+
+	session, err := as.prismaClient.UserSession.FindUnique(
+		db.UserSession.ID.Equals(claims.SessionID),
+	).Exec(ctx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("session not found: %w", err)
+	}
+
+	if session.ExpiresAt.Before(time.Now()) {
+		return nil, nil, fmt.Errorf("refresh token has expired")
+	}
+
+	if session.IsRevoked||!utils.CompareRefreshTokenHash(session.RefreshTokenHash, tokenStr) {
+		if as.RevokeAllSessions(ctx, session.UserID)!=nil {
+			return nil, nil, fmt.Errorf("failed to revoke missue session")
+		}
+		return nil, nil, fmt.Errorf("refresh token reuse detected, all sessions revoked")
+	}
+
+	return claims, session, nil
+}

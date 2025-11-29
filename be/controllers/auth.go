@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/middleware"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/prisma/db"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/services"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/types"
@@ -73,6 +74,7 @@ func (a *AuthController) Login(c *gin.Context) {
 		types.FailResponse(c, 401, "Login failed", err.Error())
 		return
 	}
+	fmt.Println("refresh token login: ", refreshToken)
 
 	c.SetCookie(
 		"refresh_token",
@@ -108,4 +110,58 @@ func (a *AuthController) Register(c *gin.Context) {
 	}
 
 	types.SuccessResponse(c, "User registered successfully", user.Username)
+}
+
+func (a *AuthController) RefreshToken(c *gin.Context) {
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		types.FailResponse(c, http.StatusUnauthorized, "Missing refresh token", err.Error())
+		return
+	}
+
+	claims, session, err := a.authService.VerifyRefreshTokenAndSession(c, refreshToken)
+	if err != nil {
+		types.FailResponse(c, http.StatusUnauthorized, "Invalid refresh token or session", err.Error())
+		return
+	}
+
+	accessToken, err := middleware.GenerateAccessToken(session.UserID, claims.Username)
+	if err != nil {
+		types.FailResponse(c, http.StatusInternalServerError, "Failed to generate access token", err.Error())
+		return
+	}
+
+	types.SuccessResponse(c, "Access token refreshed successfully", gin.H{
+		"access_token": accessToken,
+	})
+}
+
+func (a *AuthController) Logout(c *gin.Context) {
+	refreshToken, err := c.Cookie("refresh_token")
+	if err != nil {
+		types.FailResponse(c, http.StatusUnauthorized, "Missing refresh token", err.Error())
+		return
+	}
+	_, session, err := a.authService.VerifyRefreshTokenAndSession(c, refreshToken)
+	if err != nil {
+		types.FailResponse(c, http.StatusUnauthorized, "Invalid refresh token or session", err.Error())
+		return
+	}
+
+	if err := a.authService.RevokeSession(c, session); err != nil {
+		types.FailResponse(c, http.StatusInternalServerError, "Failed revoke refresh token", err.Error())
+		return
+	}
+
+	c.SetCookie(
+		"refresh_token",
+		"",
+		-1,
+		"/",
+		"",   // domain
+		true, // secure
+		true, // httpOnly 
+	)
+
+	types.SuccessResponse(c, "Logout success",nil)
 }

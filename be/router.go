@@ -24,11 +24,13 @@ func SetupRouter(
 		authGroup.POST("/login", authController.Login)
 		authGroup.GET("/nonce", authController.ReqChallenge)
 		authGroup.POST("/register", authController.Register)
+		authGroup.GET("/refresh", authController.RefreshToken)
 	}
-
+	
 	protected := authGroup.Group("/protected")
 	protected.Use(middleware.JWTAuth())
 	{
+		protected.POST("/logout", authController.Logout)
 		protected.GET("/profile", func(ctx *gin.Context){
 			claims, _ := ctx.Get("username")
 			ctx.JSON(200, gin.H{"profile": claims})
