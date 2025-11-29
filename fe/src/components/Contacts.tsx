@@ -1,50 +1,73 @@
-import { useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { List } from '@mui/material';
 import ContactList from '../components/ContactList';
 import ContactHeader from '../components/ContactHeader';
+import { useAuth } from '../context/AuthContext';
+import { UserApi } from '../services/user';
+import { useNotificationStore } from '../stores/useNotificationStore';
+import { useMemo } from 'react';
+
+interface Friend {
+  id: number;
+  username: string;
+}
 
 function Contacts() {
-  const [showSearch, setShowSearch] = useState(false); // state toggle search bar
+  const { username, token } = useAuth();
+  const { show } = useNotificationStore();
+
   const [searchQuery, setSearchQuery] = useState('');
+  const [friends, setFriends] = useState<Friend[]>([]);
 
-  const contacts = [
-    { name: 'Contact 1', avatar: 'https://i.pravatar.cc/40?img=1' },
-    { name: 'Contact 2', avatar: 'https://i.pravatar.cc/40?img=2' },
-    { name: 'Contact 3', avatar: 'https://i.pravatar.cc/40?img=3' },
-  ];
+  const userApi = useMemo(() => new UserApi(token), [token]);
 
-  // filter contacts based on searchQuery
-  const filteredContacts = contacts.filter((contact) =>
-    contact.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const fetchFriends = useCallback(async () => {
+    if (!username) return;
+    try {
+      const data = await userApi.fetchFriends(username);
+      setFriends(data);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        show(err.message || 'Failed to fetch friends', 'error');
+      } else {
+        show('Failed to fetch friends', 'error');
+      }
+    }
+  }, [username, userApi, show]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      await fetchFriends();
+    };
+    fetchData();
+  }, [fetchFriends]);
+
+  const filteredFriends = friends.filter((friend) =>
+    friend.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="">
-      {/* Contacts Sidebar */}
       <div className="flex flex-col border-r border-blue-300">
-        {/* Contact Header with Search */}
+        {/* Header with search & add friend */}
         <ContactHeader
-          showSearch={showSearch}
-          setShowSearch={setShowSearch}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
+          refreshFriends={fetchFriends} // pass fetch function to refresh after add
         />
 
-        {/* Contacts List */}
+        {/* Friends List */}
         <div className="flex-grow overflow-y-auto">
           <List className="p-0">
-            {filteredContacts.map((contact, index) => (
+            {filteredFriends.map((friend) => (
               <ContactList
-                key={contact.name}
-                filteredContacts={filteredContacts}
-                contact={contact}
-                index={index}
+                key={friend.id}
+                contact={friend}
               />
             ))}
           </List>
         </div>
       </div>
-
     </div>
   );
 }

@@ -24,4 +24,15 @@ export class UserApi extends ApiClient {
     }>> {
         return this.get(`/users/${username}/messages`);
     }
+    async fetchFriends(
+        username: string
+    ): Promise<Array<{ id: number; username: string; avatar_url: string }>> {
+        return this.get(`/friends/${username}`);
+    }
+    async addFriend(
+        username: string,
+        friendUsername: string
+    ): Promise<{ id: number; username: string; avatar_url: string }> {
+        return this.post('/friends', { username: username , friendUsername: friendUsername });
+    }
 }

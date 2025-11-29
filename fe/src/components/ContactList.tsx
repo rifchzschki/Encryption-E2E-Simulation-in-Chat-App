@@ -7,40 +7,36 @@ import {
   Typography,
   Divider,
 } from '@mui/material';
+import PersonIcon from '@mui/icons-material/Person';
 
 interface ContactListProps {
-  filteredContacts: Array<{ name: string; avatar: string }>;
-  contact: {
-    name: string;
-    avatar: string;
-  };
-  index: number;
+  contact: { id: number; username: string; };
 }
 
 export default function ContactList({
-  filteredContacts,
   contact,
-  index,
 }: ContactListProps) {
   return (
-    <React.Fragment key={contact.name}>
+    <React.Fragment key={contact.username}>
       <ListItem
         component="button"
         className="border-b border-gray-200 p-4 hover:bg-gray-100 transition-colors duration-300 ease-in-out"
       >
         <ListItemAvatar>
           <Avatar
-            src={contact.avatar}
-            alt={contact.name}
+            src={ undefined}
+            alt={contact.username}
             sx={{ width: 56, height: 56 }}
-            className="mr-4"
           />
+          <div className="mr-4">
+            {<PersonIcon />} 
+          </div>
         </ListItemAvatar>
         <div className="flex flex-row justify-between w-full">
           <div className="flex flex-col">
             <ListItemText
               className="text-bold"
-              primary={contact.name}
+              primary={contact.username}
             ></ListItemText>
             <ListItemText className="text-gray-500">Hello there</ListItemText>
           </div>
@@ -55,7 +51,7 @@ export default function ContactList({
         </div>
       </ListItem>
 
-      {index < filteredContacts.length - 1 && <Divider />}
+      {<Divider />}
     </React.Fragment>
   );
 }

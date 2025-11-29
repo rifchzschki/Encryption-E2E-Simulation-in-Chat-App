@@ -1,29 +1,29 @@
 import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
-import { Button } from '@mui/material';
-import IconButton from '@mui/material/IconButton';
-import TextField from '@mui/material/TextField';
-import Typography from '@mui/material/Typography';
+import { Button, IconButton, TextField, Typography } from '@mui/material';
 import * as React from 'react';
 import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { AuthService } from '../services/auth';
 import { useNotificationStore } from '../stores/useNotificationStore';
+import { PlusOneRounded } from '@mui/icons-material';
+import { UserApi } from '../services/user';
 
 interface ContactHeaderProps {
-  showSearch: boolean;
-  setShowSearch: React.Dispatch<React.SetStateAction<boolean>>;
   searchQuery: string;
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+  refreshFriends: () => void; // callback to reload friends after adding
 }
 
 export default function ContactHeader({
-  showSearch,
-  setShowSearch,
   searchQuery,
   setSearchQuery,
+  // refreshFriends,
 }: ContactHeaderProps) {
-  const { setLoading, token, setToken } = useAuth();
+  const [showSearch, setShowSearch] = React.useState(false);
+  const [showAddContact, setShowAddContact] = React.useState(false);
+  const [newContactUsername, setNewContactUsername] = React.useState('');
+  const { username, setLoading, token, setToken } = useAuth();
   const { show } = useNotificationStore();
   const navigate = useNavigate();
 
@@ -44,6 +44,35 @@ export default function ContactHeader({
       });
   };
 
+  const handleAddFriend = async () => {
+    if (!newContactUsername.trim()) return;
+
+    setLoading(true);
+    const userApi = new UserApi(token);
+    try {
+      if (!username) throw new Error('Username not found');
+      await userApi.addFriend( username, newContactUsername.trim());
+      show(`Added ${newContactUsername} as a friend`, 'success');
+      setNewContactUsername('');
+      setShowAddContact(false);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        show(err.message || 'Failed to add friend', 'error');
+      } else {
+        show('Failed to add friend', 'error');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // optional: add friend on Enter key press
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleAddFriend();
+    }
+  };
+
   return (
     <>
       <div className="p-4 flex flex-row justify-between items-center bg-blue-200">
@@ -51,7 +80,6 @@ export default function ContactHeader({
 
         <figure className="flex items-center gap-3 m-0">
           <img src="/transparent-logo.png" alt="Logo" width={50} height={50} />
-
           <Typography
             variant="h6"
             noWrap
@@ -71,9 +99,11 @@ export default function ContactHeader({
           </Typography>
         </figure>
 
-        {/* Search button / close button */}
         <IconButton onClick={() => setShowSearch((prev) => !prev)}>
           {showSearch ? <CloseIcon /> : <SearchIcon />}
+        </IconButton>
+        <IconButton onClick={() => setShowAddContact((prev) => !prev)}>
+          {showAddContact ? <CloseIcon /> : <PlusOneRounded />}
         </IconButton>
       </div>
 
@@ -88,6 +118,24 @@ export default function ContactHeader({
             onChange={(e) => setSearchQuery(e.target.value)}
             className="rounded-md"
           />
+        </div>
+      )}
+
+      {/* Add Contact bar */}
+      {showAddContact && (
+        <div className="p-2 bg-white flex gap-2">
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Add new contact by username..."
+            value={newContactUsername}
+            onChange={(e) => setNewContactUsername(e.target.value)}
+            onKeyDown={handleKeyPress}
+            className="rounded-md"
+          />
+          <Button variant="contained" onClick={handleAddFriend}>
+            Add
+          </Button>
         </div>
       )}
     </>

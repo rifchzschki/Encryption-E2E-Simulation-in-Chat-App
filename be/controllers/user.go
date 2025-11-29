@@ -75,3 +75,35 @@ func (u *UserController) GetAllMessagesByUser(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, messages)
 }
+
+func (u *UserController) AddFriendHandler(c *gin.Context) {
+	var r types.FriendRequestPayload
+	if err := c.BindJSON(&r); err != nil || r.Username == "" || r.FriendUsername == "" {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	friendship, err := u.userService.AddFriend(c, r.Username, r.FriendUsername)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{
+		"id":           friendship.ID,
+		"userID":       friendship.User1ID,
+		"friendUserID": friendship.User2ID,
+	})
+}
+
+func (u *UserController) GetFriendsHandler(c *gin.Context) {
+	username := c.Param("username")
+	friends, err := u.userService.GetFriends(c, username)
+	if err != nil {
+		c.JSON(http.StatusNotFound, []interface{}{})
+		return
+	}
+	c.JSON(http.StatusOK, friends)
+}
