@@ -10,6 +10,7 @@ import (
     "github.com/gorilla/websocket"
     "github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/services"
     "github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/types"
+    "github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/middleware"
 )
 
 type SocketController struct {
@@ -30,7 +31,20 @@ func NewSocketController(us *services.UserService, cs *services.ChatService) *So
 }
 
 func (s *SocketController) ChatWS(c *gin.Context) {
-    username := c.GetString("username")
+    //middlware func
+    token := c.Query("token")
+    if token == "" {
+        c.Status(http.StatusUnauthorized)
+        return
+    }
+    claims, err := middleware.VerifyAccessToken(token)
+    if err != nil {
+        types.FailResponse(c, http.StatusUnauthorized, "Invalid or expired token", err.Error())
+        c.Abort()
+        return
+    }
+    
+    username := claims.Username
     if username == "" {
         c.Status(http.StatusUnauthorized)
         return

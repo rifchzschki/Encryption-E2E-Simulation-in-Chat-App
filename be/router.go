@@ -25,6 +25,7 @@ func SetupRouter(
 		authGroup.GET("/nonce", authController.ReqChallenge)
 		authGroup.POST("/register", authController.Register)
 		authGroup.GET("/refresh", authController.RefreshToken)
+		authGroup.GET("/ws/chat", socketController.ChatWS)
 	}
 	
 	protected := authGroup.Group("/protected")
@@ -39,7 +40,7 @@ func SetupRouter(
 			claims, _ := ctx.Get("username")
 			ctx.JSON(200, gin.H{"profile": claims})
 		})
-		protected.GET("/ws/chat", socketController.ChatWS)
+		
 		protected.GET("/history/:username_receiver", userController.ChatHistoryHandler)
 		protected.GET("/users/:username/public-key", userController.GetPublicKey)
 	}
