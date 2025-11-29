@@ -1,6 +1,5 @@
 import { createBrowserRouter } from 'react-router';
 import App from './Pages/App';
-import ContactPage from './Pages/ContactPage';
 import RootErrorBoundary from './components/ErrorBoundariy';
 import Protected from './components/Protected';
 import RootLayout from './components/RootLayout';
@@ -17,7 +16,6 @@ const router = createBrowserRouter([
         Component: Protected,
         children: [
           { index: true, Component: App },
-          { path: 'contacts', Component: ContactPage },
         ],
       },
       {

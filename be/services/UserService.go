@@ -79,7 +79,6 @@ func (us *UserService) GetAllMessagesByUser(ctx *gin.Context, username string) (
 		return nil, err
 	}
 
-	// Convert to []*db.MessageModel
 	messagePointers := make([]*db.MessageModel, len(messages))
 	for i := range messages {
 		messagePointers[i] = &messages[i]
@@ -89,13 +88,11 @@ func (us *UserService) GetAllMessagesByUser(ctx *gin.Context, username string) (
 }
 
 func (us *UserService) GetFriends(ctx *gin.Context, username string) ([]db.UserModel, error) {
-	// Find the user
 	user, err := us.GetUserByUsername(ctx, username)
 	if err != nil {
 		return nil, err
 	}
 
-	// Find all friendships where user is either user1 or user2
 	relations, err := us.prismaClient.UserFriend.FindMany(
 		db.UserFriend.Or(
 			db.UserFriend.User1ID.Equals(user.ID),
@@ -122,7 +119,6 @@ func (us *UserService) GetFriends(ctx *gin.Context, username string) ([]db.UserM
 }
 
 func (us *UserService) AddFriend(ctx *gin.Context, username, friendUsername string) (*db.UserFriendModel, error) {
-	// Find both users
 	user, err := us.GetUserByUsername(ctx, username)
 	if err != nil {
 		return nil, err
@@ -133,19 +129,16 @@ func (us *UserService) AddFriend(ctx *gin.Context, username, friendUsername stri
 		return nil, fmt.Errorf("friend user not found")
 	}
 
-	// Cannot add self
 	if user.ID == friend.ID {
 		return nil, fmt.Errorf("cannot add yourself as a friend")
 	}
 
-	// Enforce sorted IDs to satisfy unique constraint
 	user1 := user.ID
 	user2 := friend.ID
 	if user1 > user2 {
 		user1, user2 = user2, user1
 	}
 
-	// Create friendship
 	friendship, err := us.prismaClient.UserFriend.CreateOne(
 		db.UserFriend.User1.Link(db.User.ID.Equals(user1)),
 		db.UserFriend.User2.Link(db.User.ID.Equals(user2)),

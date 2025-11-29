@@ -4,7 +4,6 @@ import TypingBox from './TypingBox';
 import { initChatSocket, onIncomingMessage } from '../services/chatSocket';
 import { fetchChatHistory } from '../services/chatSocket';
 import type { VerifiedChatMessage,ChatBoxProps } from '../types/chat';
-import { useAuth } from '../context/AuthContext';
 
 
 export default function ChatBox({ me, to = 'bob', token }: ChatBoxProps) {

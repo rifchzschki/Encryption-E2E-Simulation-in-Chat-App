@@ -49,15 +49,13 @@ function Contacts() {
   return (
     <div className="">
       <div className="flex flex-col border-r border-blue-300">
-        {/* Header with search & add friend */}
         <ContactHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
-          refreshFriends={fetchFriends} // pass fetch function to refresh after add
+          refreshFriends={fetchFriends}
         />
 
-        {/* Friends List */}
-        <div className="flex-grow overflow-y-auto">
+        <div className="grow overflow-y-auto">
           <List className="p-0">
             {filteredFriends.map((friend) => (
               <ContactList

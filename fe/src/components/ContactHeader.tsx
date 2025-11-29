@@ -12,13 +12,12 @@ import { Add, Menu } from '@mui/icons-material';
 interface ContactHeaderProps {
   searchQuery: string;
   setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
-  refreshFriends: () => void; // callback to reload friends after adding
+  refreshFriends: () => void;
 }
 
 export default function ContactHeader({
   searchQuery,
   setSearchQuery,
-  // refreshFriends,
 }: ContactHeaderProps) {
   const [showSearch, setShowSearch] = React.useState(false);
   const [showAddContact, setShowAddContact] = React.useState(false);
@@ -72,7 +71,6 @@ export default function ContactHeader({
     }
   };
 
-  // optional: add friend on Enter key press
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleAddFriend();
@@ -164,7 +162,6 @@ export default function ContactHeader({
         </Popover>
       </div>
 
-      {/* Search bar */}
       {showSearch && (
         <div className="p-2 bg-white">
           <TextField
@@ -178,7 +175,6 @@ export default function ContactHeader({
         </div>
       )}
 
-      {/* Add Contact bar */}
       {showAddContact && (
         <div className="p-2 bg-white flex gap-2">
           <TextField

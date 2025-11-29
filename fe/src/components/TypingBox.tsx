@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { hashMessage, importPrivateKey, signHash, signNonce, eccEncrypt } from '../utils/crypto'
+import { hashMessage, signNonce, eccEncrypt } from '../utils/crypto'
 import { sendRaw } from '../services/chatSocket'
 import type { TypingBoxProps } from '../types/chat'
 
