@@ -1,4 +1,3 @@
-import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
 import { Button, IconButton, TextField, Typography } from '@mui/material';
 import * as React from 'react';
@@ -6,8 +5,9 @@ import { useNavigate } from 'react-router';
 import { useAuth } from '../context/AuthContext';
 import { AuthService } from '../services/auth';
 import { useNotificationStore } from '../stores/useNotificationStore';
-import { PlusOneRounded } from '@mui/icons-material';
 import { UserApi } from '../services/user';
+import { Popover } from '@mui/material';
+import { Add, Menu } from '@mui/icons-material';
 
 interface ContactHeaderProps {
   searchQuery: string;
@@ -51,7 +51,7 @@ export default function ContactHeader({
     const userApi = new UserApi(token);
     try {
       if (!username) throw new Error('Username not found');
-      await userApi.addFriend( username, newContactUsername.trim());
+      await userApi.addFriend(username, newContactUsername.trim());
       show(`Added ${newContactUsername} as a friend`, 'success');
       setNewContactUsername('');
       setShowAddContact(false);
@@ -73,6 +73,29 @@ export default function ContactHeader({
     }
   };
 
+  const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(
+    null
+  );
+
+  const handleClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+    setSearchQuery('');
+    setShowAddContact(false);
+    setShowSearch(false);
+  };
+
+  const handleClickAdd = () => {
+    setShowAddContact((prev) => !prev);
+    setAnchorEl(null);
+  };
+
+  const handleClickSearch = () => {
+    setShowSearch((prev) => !prev);
+    setAnchorEl(null);
+  };
+
+  const open = Boolean(anchorEl);
+  const id = open ? 'simple-popover' : undefined;
   return (
     <>
       <div className="p-4 flex flex-row justify-between items-center bg-blue-200">
@@ -99,12 +122,40 @@ export default function ContactHeader({
           </Typography>
         </figure>
 
-        <IconButton onClick={() => setShowSearch((prev) => !prev)}>
-          {showSearch ? <CloseIcon /> : <SearchIcon />}
+        <IconButton onClick={handleClick}>
+          <Menu />{' '}
         </IconButton>
-        <IconButton onClick={() => setShowAddContact((prev) => !prev)}>
-          {showAddContact ? <CloseIcon /> : <PlusOneRounded />}
-        </IconButton>
+        <Popover
+          id={id}
+          open={open}
+          anchorEl={anchorEl}
+          onClose={() => setAnchorEl(null)}
+          anchorOrigin={{
+            vertical: 'bottom',
+            horizontal: 'left',
+          }}
+        >
+          <div className="flex flex-col p-2">
+            <div
+              onClick={handleClickSearch}
+              className="flex flex-row gap-1 w-full items-start cursor-pointer mb-2 hover:bg-gray-100 p-1 rounded-md transition-colors duration-300 ease-in-out"
+            >
+              <SearchIcon className="text-blue-500" />
+              <Typography variant="body2" color="textPrimary">
+                Search
+              </Typography>
+            </div>
+            <div
+              onClick={handleClickAdd}
+              className="flex flex-row gap-1 w-full items-start cursor-pointer mb-2 hover:bg-gray-100 p-1 rounded-md transition-colors duration-300 ease-in-out"
+            >
+              <Add className="text-blue-500" />
+              <Typography variant="body2" color="textPrimary">
+                Add Contact
+              </Typography>
+            </div>
+          </div>
+        </Popover>
       </div>
 
       {/* Search bar */}

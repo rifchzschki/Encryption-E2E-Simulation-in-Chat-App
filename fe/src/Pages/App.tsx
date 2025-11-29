@@ -1,9 +1,7 @@
 import ChatComponent from '../components/ChatComponent';
 
-import {useAuth} from '../context/AuthContext';
 import Contacts from '../components/Contacts'; // Adjust the path if necessary
 function App() {
-  const {token, username} = useAuth();
   return (
     <>
       <main className="flex h-screen">
