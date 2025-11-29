@@ -6,7 +6,7 @@ import (
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/types"
 )
 
-type UserService struct{
+type UserService struct {
 	prismaClient *db.PrismaClient
 }
 
@@ -16,7 +16,7 @@ func NewUserService(client *db.PrismaClient) *UserService {
 	}
 }
 
-func (us *UserService) CreateUser(ctx *gin.Context, username string, publicKeyHex types.PublicKey) (*db.UserModel, error){
+func (us *UserService) CreateUser(ctx *gin.Context, username string, publicKeyHex types.PublicKey) (*db.UserModel, error) {
 	user, err := us.prismaClient.User.CreateOne(
 		db.User.Username.Set(username),
 		db.User.PublicKeyX.Set(publicKeyHex.X),
@@ -59,5 +59,28 @@ func (us *UserService) GetUserByUsername(ctx *gin.Context, username string) (*db
 	return user, nil
 }
 
+func (us *UserService) GetAllMessagesByUser(ctx *gin.Context, username string) ([]*db.MessageModel, error) {
+	user, err := us.GetUserByUsername(ctx, username)
+	if err != nil {
+		return nil, err
+	}
 
+	messages, err := us.prismaClient.Message.FindMany(
+		db.Message.Or(
+			db.Message.SenderID.Equals(user.ID),
+			db.Message.ReceiverID.Equals(user.ID),
+		),
+	).Exec(ctx)
 
+	if err != nil {
+		return nil, err
+	}
+
+	// Convert to []*db.MessageModel
+	messagePointers := make([]*db.MessageModel, len(messages))
+	for i := range messages {
+		messagePointers[i] = &messages[i]
+	}
+
+	return messagePointers, nil
+}

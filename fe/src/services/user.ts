@@ -13,4 +13,15 @@ export class UserApi extends ApiClient {
     ): Promise<{ username: string; public_key_pem: string }> {
         return this.get(`/users/${username}/public-key`);
     }
+    async fetchMessages(
+        username: string
+    ): Promise<Array<{
+        id: number;
+        sender: string;
+        receiver: string;
+        ciphertext: string;
+        timestamp: string;
+    }>> {
+        return this.get(`/users/${username}/messages`);
+    }
 }
