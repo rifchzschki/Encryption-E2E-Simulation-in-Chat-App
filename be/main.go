@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+  utils.LoadEnv()
   client := services.GetDB()
   quit := make(chan os.Signal, 1)
   signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
@@ -30,9 +31,12 @@ func main() {
   authService := services.NewAuthService(client)
   authController := controllers.NewAuthController(userService, authService)
   socketController := controllers.NewSocketController(userService, chatService)
-    userController := controllers.NewUserController(userService, chatService)
+  userController := controllers.NewUserController(userService, chatService)
   
-  port := utils.GetEnv("PORT", "8080")
+  port := os.Getenv("PORT")
+  if port == "" {
+      port = "8080"
+  }
 
   router := SetupRouter(authController,socketController,userController)
   router.Run(":" + port)

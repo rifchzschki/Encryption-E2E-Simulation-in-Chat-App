@@ -17,7 +17,6 @@ func SetupRouter(
 
 	router.GET("/health-check", func(ctx *gin.Context) { ctx.JSON(200, gin.H{"status": "oke"}) })
 
-	//Auth
 	authGroup := router.Group("/api")
 	{
 		authGroup.POST("/login", authController.Login)

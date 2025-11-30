@@ -10,6 +10,7 @@ import (
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/prisma/db"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/services"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/types"
+	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/utils"
 )
 
 type AuthController struct{
@@ -76,15 +77,7 @@ func (a *AuthController) Login(c *gin.Context) {
 	}
 	fmt.Println("refresh token login: ", refreshToken)
 
-	c.SetCookie(
-		"refresh_token",
-		refreshToken,
-		int(types.EXPIRATION_REFRESH_TOKEN.Seconds()),
-		"/",
-		"",   // domain (sesuaikan)
-		true, // secure (set true di prod, bisa false di dev http)
-		true, // httpOnly
-	)
+	utils.SetRefreshCookie(c, refreshToken, int(types.EXPIRATION_REFRESH_TOKEN.Seconds()))
 
 	types.SuccessResponse(c, "Login successful", gin.H{
 		"access_token": accessToken,

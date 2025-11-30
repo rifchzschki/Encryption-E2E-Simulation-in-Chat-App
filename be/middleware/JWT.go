@@ -5,16 +5,16 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/types"
-	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/utils"
 )
 
 var (
-	accessSecret  = []byte(utils.GetEnv("ACCESS_TOKEN_SECRET", "DEFAULT_ACCESS_SECRET"))  
-	refreshSecret = []byte(utils.GetEnv("REFRESH_TOKEN_SECRET", "DEFAULT_REFRESH_SECRET")) 
+	accessSecret  = []byte(os.Getenv("ACCESS_TOKEN_SECRET"))  
+	refreshSecret = []byte(os.Getenv("REFRESH_TOKEN_SECRET")) 
 )
 
 type AccessTokenClaims struct {

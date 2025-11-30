@@ -2,23 +2,26 @@ package middleware
 
 import (
 	"net/http"
-	"fmt"
+	"os"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 )
 
 func CORS() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		allowedOrigins := map[string]bool{
-			"http://localhost:5173": true,
-			"https://encryption-e2-e-simulation-in-chat.vercel.app": true,
-		}
+	origins := strings.Split(os.Getenv("ALLOWED_ORIGINS"), ",")
+	allowed := make(map[string]bool)
+	for _, o := range origins {
+		allowed[strings.TrimSpace(o)] = true
+	}
 
+	return func(c *gin.Context) {
 		origin := c.Request.Header.Get("Origin")
-		fmt.Println("Origin", origin)
-        if allowedOrigins[origin] {
-            c.Header("Access-Control-Allow-Origin", origin)
-            c.Header("Vary", "Origin")
-        }
+
+		if allowed[origin] {
+			c.Header("Access-Control-Allow-Origin", origin)
+			c.Header("Vary", "Origin")
+		}
 
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Authorization, Content-Type")
