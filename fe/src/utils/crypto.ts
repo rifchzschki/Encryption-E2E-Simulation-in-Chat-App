@@ -120,13 +120,6 @@ export async function signNonce(
   };
 }
 
-function pemBody(pem: string) {
-  return pem
-    .replace(/-----BEGIN [^-]+-----/g, '')
-    .replace(/-----END [^-]+-----/g, '')
-    .replace(/\s+/g, '');
-}
-
 function b64ToBytes(b64: string) {
   const bin = atob(b64);
   const bytes = new Uint8Array(bin.length);
@@ -222,27 +215,6 @@ function derToRS(der: Uint8Array): { r: string; s: string } {
   return { r: toHex(r), s: toHex(s) };
 }
 
-function rsToDer(rHex: string, sHex: string): ArrayBuffer {
-  const r = hexToBytes(rHex);
-  const s = hexToBytes(sHex);
-  const encInt = (v: Uint8Array) => {
-    const pad = v.length > 0 && v[0] & 0x80 ? 1 : 0;
-    const out = new Uint8Array(2 + pad + v.length);
-    out[0] = 0x02;
-    out[1] = pad + v.length;
-    if (pad) out[2] = 0x00;
-    out.set(v, 2 + pad);
-    return out;
-  };
-  const rInt = encInt(r);
-  const sInt = encInt(s);
-  const out = new Uint8Array(2 + rInt.length + sInt.length);
-  out[0] = 0x30;
-  out[1] = rInt.length + sInt.length;
-  out.set(rInt, 2);
-  out.set(sInt, 2 + rInt.length);
-  return out.buffer;
-}
 const base64Url = (bytes: Uint8Array) =>
   btoa(String.fromCharCode(...bytes))
     .replace(/=+$/g, '')
@@ -410,55 +382,3 @@ const xyToPoint = (x: string, y: string) => {
   return out;
 };
 
-const derLen = (len: number) => {
-  if (len < 0x80) return new Uint8Array([len]);
-  const bytes: number[] = [];
-  while (len > 0) {
-    bytes.unshift(len & 0xff);
-    len >>= 8;
-  }
-  return new Uint8Array([0x80 | bytes.length, ...bytes]);
-};
-
-const derSeq = (inner: Uint8Array) =>
-  new Uint8Array([0x30, ...derLen(inner.length), ...inner]);
-const derOid = (oid: number[]) => {
-  const first = oid[0] * 40 + oid[1];
-  const out: number[] = [first];
-  for (let i = 2; i < oid.length; i++) {
-    let v = oid[i];
-    const tmp: number[] = [];
-    do {
-      tmp.unshift(v & 0x7f);
-      v >>= 7;
-    } while (v > 0);
-    for (let j = 0; j < tmp.length - 1; j++) tmp[j] |= 0x80;
-    out.push(...tmp);
-  }
-  return new Uint8Array([0x06, ...derLen(out.length), ...out]);
-};
-const derInt = (bytes: Uint8Array) => {
-  if (bytes[0] & 0x80) bytes = new Uint8Array([0x00, ...bytes]);
-  return new Uint8Array([0x02, ...derLen(bytes.length), ...bytes]);
-};
-const derOctet = (bytes: Uint8Array) =>
-  new Uint8Array([0x04, ...derLen(bytes.length), ...bytes]);
-const buildECPrivateKey = (dHex: string) =>
-  derSeq(
-    new Uint8Array([
-      ...derInt(new Uint8Array([0x01])),
-      ...derOctet(hexToBytes(dHex)),
-    ])
-  );
-const buildPKCS8FromD = (dHex: string) => {
-  const alg = derSeq(
-    new Uint8Array([
-      ...derOid([1, 2, 840, 10045, 2, 1]),
-      ...derOid([1, 2, 840, 10045, 3, 1, 7]),
-    ])
-  );
-  const version = derInt(new Uint8Array([0x00]));
-  return derSeq(
-    new Uint8Array([...version, ...alg, ...derOctet(buildECPrivateKey(dHex))])
-  );
-};

@@ -9,7 +9,6 @@ export default function TypingBox({
   me,
   to,
   onLocalAppend,
-  token,
   receiverPublicKeyPem,
 }: TypingBoxProps) {
   const [value, setValue] = useState('');

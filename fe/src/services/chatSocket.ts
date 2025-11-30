@@ -7,11 +7,9 @@ import {
   eccDecrypt,
   hashMessage,
   verifySignature,
-  toHex,
   importPublicKeyFromXY,
 } from '../utils/crypto';
 import { UserApi } from './user';
-import { useAuth } from '../context/AuthContext';
 
 let ws: WebSocket | null = null;
 let currentUser: string | null = null;

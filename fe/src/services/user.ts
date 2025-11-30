@@ -1,4 +1,3 @@
-import { use } from 'react';
 import type { PublicKey, Token } from '../types/auth';
 import { ApiClient } from './api';
 

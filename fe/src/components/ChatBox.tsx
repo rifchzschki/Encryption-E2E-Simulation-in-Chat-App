@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import ChatBubble from './ChatBubble';
 import TypingBox from './TypingBox';
 import { initChatSocket, onIncomingMessage } from '../services/chatSocket';
-import { fetchChatHistory } from '../services/chatSocket';
 import type { VerifiedChatMessage,ChatBoxProps } from '../types/chat';
 
 
