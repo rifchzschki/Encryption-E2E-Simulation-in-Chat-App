@@ -10,10 +10,11 @@ func CORS() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		allowedOrigins := map[string]bool{
 			"http://localhost:5173": true,
-			"https://encryption-e2-e-simulation-in-chat.vercel.app": true,
+			"https://encryption-e2-e-simulation-in-chat.vercel.app/": true,
 		}
 
 		origin := c.Request.Header.Get("Origin")
+		fmt.Println("Origin", origin)
         if allowedOrigins[origin] {
             c.Header("Access-Control-Allow-Origin", origin)
             c.Header("Vary", "Origin")
