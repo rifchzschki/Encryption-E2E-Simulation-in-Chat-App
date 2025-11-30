@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { UserApi } from '../services/user';
 import { useNotificationStore } from '../stores/useNotificationStore';
 import { useMemo } from 'react';
+import { onFriendListChanged } from '../services/chatSocket';
 
 interface Friend {
   id: number;
@@ -22,7 +23,7 @@ function Contacts() {
   const userApi = useMemo(() => new UserApi(token), [token]);
 
   const fetchFriends = useCallback(async () => {
-    console.log(username)
+    console.log(username);
     if (!username) return;
     try {
       const data = await userApi.fetchFriends(username);
@@ -43,6 +44,26 @@ function Contacts() {
     fetchData();
   }, [fetchFriends]);
 
+  useEffect(() => {
+    const unsubscribe = onFriendListChanged((notification) => {
+      if (notification.data.friendship_id === null) {
+        console.log(`${notification.data.username} removed you as a friend!`);
+        show(
+          `${notification.data.username} removed you as a friend!`,
+          'warning'
+        );
+        fetchFriends();
+        return;
+      } else {
+        console.log(`${notification.data.username} added you as a friend!`);
+        show(`${notification.data.username} added you as a friend!`, 'success');
+        fetchFriends();
+      }
+    });
+
+    return unsubscribe;
+  }, [fetchFriends, show]);
+
   const filteredFriends = friends.filter((friend) =>
     friend.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -59,10 +80,7 @@ function Contacts() {
         <div className="grow overflow-y-auto">
           <List className="p-0">
             {filteredFriends.map((friend) => (
-              <ContactList
-                key={friend.id}
-                contact={friend}
-              />
+              <ContactList key={friend.id} contact={friend} />
             ))}
           </List>
         </div>

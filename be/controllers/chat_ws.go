@@ -1,16 +1,17 @@
 package controllers
 
 import (
-    "context"
-    "encoding/json"
-    "net/http"
-    "sync"
+	"context"
+	"encoding/json"
+	"net/http"
+	"sync"
+	"time"
 
-    "github.com/gin-gonic/gin"
-    "github.com/gorilla/websocket"
-    "github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/services"
-    "github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/types"
-    "github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/middleware"
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
+	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/middleware"
+	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/services"
+	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/types"
 )
 
 type SocketController struct {
@@ -80,4 +81,28 @@ func (s *SocketController) writeTo(username string, v interface{}) {
     }
     conn, _ := val.(*websocket.Conn)
     _ = conn.WriteJSON(v)
+}
+
+func (s *SocketController) SendFriendNotification(username, friendUsername string, friendshipID interface{}) {
+    notification := map[string]interface{}{
+        "type": "friendlist_changed",
+        "data": map[string]interface{}{
+            "username":      username,
+            "friendship_id": friendshipID,
+            "timestamp":     time.Now().Unix(),
+        },
+    }
+    s.writeTo(friendUsername, notification)
+}
+
+func (s *SocketController) SendUnfriendNotification(username, friendUsername string) {
+    notification := map[string]interface{}{
+        "type": "friendlist_changed",
+        "data": map[string]interface{}{
+            "username":      username,
+            "friendship_id": nil,
+            "timestamp":     time.Now().Unix(),
+        },
+    }
+    s.writeTo(friendUsername, notification)
 }

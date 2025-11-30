@@ -11,9 +11,21 @@ import {
 } from '../utils/crypto';
 import { UserApi } from './user';
 
+export interface FriendListChangedNotification {
+  type: 'friendlist_changed';
+  data: {
+    username: string;
+    friendship_id: string;
+    timestamp: number;
+  };
+}
+
 let ws: WebSocket | null = null;
 let currentUser: string | null = null;
 const listeners: ((m: VerifiedChatMessage) => void)[] = [];
+const friendListeners: ((
+  notification: FriendListChangedNotification
+) => void)[] = [];
 
 export function initChatSocket(token: string | undefined, username: string) {
   currentUser = username;
@@ -23,7 +35,13 @@ export function initChatSocket(token: string | undefined, username: string) {
   );
   ws.onmessage = async (ev) => {
     try {
-      const data: IncomingPayload = JSON.parse(ev.data);
+      const data = JSON.parse(ev.data);
+
+      if (data.type === 'friendlist_changed') {
+        friendListeners.forEach((l) => l(data));
+        return;
+      }
+
       if (!currentUser || data.receiver_username !== currentUser) return;
       const priv = localStorage.getItem('privateKey');
       if (!priv) return;
@@ -145,4 +163,14 @@ export async function fetchChatHistory(
   }
 
   return out;
+}
+
+export function onFriendListChanged(
+  cb: (notification: FriendListChangedNotification) => void
+) {
+  friendListeners.push(cb);
+  return () => {
+    const i = friendListeners.indexOf(cb);
+    if (i >= 0) friendListeners.splice(i, 1);
+  };
 }

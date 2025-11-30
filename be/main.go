@@ -31,7 +31,7 @@ func main() {
   authService := services.NewAuthService(client)
   authController := controllers.NewAuthController(userService, authService)
   socketController := controllers.NewSocketController(userService, chatService)
-  userController := controllers.NewUserController(userService, chatService)
+  userController := controllers.NewUserController(userService, chatService, socketController)
   
   port := os.Getenv("PORT")
   if port == "" {

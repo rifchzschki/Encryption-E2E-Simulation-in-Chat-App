@@ -42,7 +42,8 @@ func SetupRouter(
 		protected.GET("/history/:username_receiver", userController.ChatHistoryHandler)
 		protected.GET("/users/:username/public-key", userController.GetPublicKey)
 		protected.GET("/friends/:username", userController.GetFriendsHandler)
-		protected.POST("/friends", userController.AddFriendHandler)
+		protected.POST("/friends/add", userController.AddFriendHandler)
+		protected.DELETE("/friends/delete/:username/:friend_username", userController.DeleteFriendHandler)
 	}
 
 	return router
