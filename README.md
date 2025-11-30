@@ -34,6 +34,6 @@ Simulasi enkripsi end‑to‑end (E2E) pada aplikasi chat yang terdiri dari dua 
 
 ## Penulis
 
-- M. Rifki Virziadeili Harisman [https://github.com/rifchzschki]
-- Mohammad Nugraha Eka Prawira [https://github.com/EkaaPrawiraa]
-- Rici Trisna Putra [https://github.com/RiciTrisnaP]
+- [M. Rifki Virziadeili Harisman](https://github.com/rifchzschki)
+- [Mohammad Nugraha Eka Prawira](https://github.com/EkaaPrawiraa)
+- [Rici Trisna Putra](https://github.com/RiciTrisnaP)
