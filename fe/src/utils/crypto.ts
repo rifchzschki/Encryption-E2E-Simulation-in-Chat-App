@@ -205,7 +205,6 @@ export async function verifySignature(
 function derToRS(der: Uint8Array): { r: string; s: string } {
   let i = 0;
   if (der[i++] !== 0x30) throw new Error('bad der');
-  const seqLen = der[i++];
   if (der[i++] !== 0x02) throw new Error('bad der');
   const rLen = der[i++];
   const r = der.slice(i, i + rLen);
