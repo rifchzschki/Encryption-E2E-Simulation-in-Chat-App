@@ -11,8 +11,6 @@ COPY . .
 
 RUN go run github.com/steebchen/prisma-client-go generate
 
-RUN go run github.com/steebchen/prisma-client-go db push
-
 RUN go build -o backend .
 
 FROM alpine:latest
