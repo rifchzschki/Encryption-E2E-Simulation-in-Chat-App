@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -30,23 +29,22 @@ func (a *AuthController) ReqChallenge(c *gin.Context) {
 	var req types.NonceChallengeRequest
 	
 	if err := c.ShouldBindQuery(&req); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
+		types.FailResponse(c, http.StatusBadRequest, "Bad Request", err.Error())
 		return
 	}
 
 	if err := a.userService.CheckUserExists(c, req.Username); err != nil {
-		types.FailResponse(c, 404, "User not found", req.Username)
+		types.FailResponse(c, http.StatusUnauthorized, "Invalid credentials", nil)
 		return
 	}
 
 	nonce, err := services.GenerateNonce()
 	if err != nil {
-		types.FailResponse(c, 500, "Failed to generate nonce", err.Error())
+		types.FailResponse(c, http.StatusInternalServerError, "Failed to generate nonce", err.Error())
 		return
 	}
 
 	services.StoreNonce(req.Username, nonce, 2*time.Minute)
-	fmt.Println("Init Nonce: ", nonce)
 
 	types.SuccessResponse(c, "Challenge generated", types.ChallengeResponse{Nonce: nonce})
 }
@@ -55,13 +53,13 @@ func (a *AuthController) Login(c *gin.Context) {
 	var loginPayload types.LoginRequest
 
     if err := c.ShouldBindJSON(&loginPayload); err != nil {
-        c.JSON(400, gin.H{"error": err.Error()})
+        types.FailResponse(c, http.StatusBadRequest, "Bad Request", err.Error())
         return
     }
 
 	user, err := a.userService.GetUserByUsername(c, loginPayload.Username)
 	if err != nil {
-		types.FailResponse(c, 404, "User not found", err.Error())
+		types.FailResponse(c, http.StatusUnauthorized, "Invalid credentials", nil)
 		return
 	}
 
@@ -72,10 +70,9 @@ func (a *AuthController) Login(c *gin.Context) {
 
 	accessToken, refreshToken, err := a.authService.ProcessLogin(c, user, publicKey, loginPayload)
 	if err != nil {
-		types.FailResponse(c, 401, "Login failed", err.Error())
+		types.FailResponse(c, http.StatusUnauthorized, "Invalid credentials", nil)
 		return
 	}
-	fmt.Println("refresh token login: ", refreshToken)
 
 	utils.SetRefreshCookie(c, refreshToken, int(types.EXPIRATION_REFRESH_TOKEN.Seconds()))
 
