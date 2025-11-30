@@ -10,7 +10,7 @@ func CORS() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		allowedOrigins := map[string]bool{
 			"http://localhost:5173": true,
-			"https://encryption-e2e-simulation-in-chat-app-production.up.railway.app": true,
+			"https://encryption-e2-e-simulation-in-chat.vercel.app": true,
 		}
 
 		origin := c.Request.Header.Get("Origin")
