@@ -20,8 +20,6 @@ func CORS() gin.HandlerFunc {
             c.Header("Vary", "Origin")
         }
 
-		c.Header("Access-Control-Allow-Origin", "http://localhost:5173")
-		c.Header("Access-Control-Allow-Origin", "http://encryption-e2e-simulation-in-chat-app-production.up.railway.app")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Authorization, Content-Type")
 		c.Header("Access-Control-Expose-Headers", "Authorization")
