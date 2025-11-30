@@ -7,19 +7,24 @@ import {
   Typography,
   Divider,
 } from '@mui/material';
+import { useReceiverStore } from '../stores/useReceiverStore';
 
 interface ContactListProps {
   contact: { id: number; username: string; };
 }
 
+
+
 export default function ContactList({
   contact,
 }: ContactListProps) {
+  const {  setReceiver } = useReceiverStore();
   return (
     <React.Fragment key={contact.username}>
       <ListItem
         component="button"
         className="border-b border-gray-200 p-4 hover:bg-gray-100 transition-colors duration-300 ease-in-out"
+        onClick={()=>setReceiver(contact.username)}
       >
         <ListItemAvatar>
           <div className="mr-4">

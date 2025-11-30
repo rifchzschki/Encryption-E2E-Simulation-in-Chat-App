@@ -123,7 +123,7 @@ func (a *AuthController) RefreshToken(c *gin.Context) {
 
 	types.SuccessResponse(c, "Access token refreshed successfully", gin.H{
 		"access_token": accessToken,
-		"username": claims.Username,
+		"username":     claims.Username,
 	})
 }
 

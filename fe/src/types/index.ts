@@ -5,3 +5,5 @@ export type BaseResponse<T> = {
 }
 
 export const NOTIFICATAION_DURATION = 3000 // 3 detik
+
+// export type 

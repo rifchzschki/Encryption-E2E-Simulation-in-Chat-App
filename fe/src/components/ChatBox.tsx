@@ -6,24 +6,32 @@ import { fetchChatHistory } from '../services/chatSocket';
 import type { VerifiedChatMessage,ChatBoxProps } from '../types/chat';
 
 
-export default function ChatBox({ me, to = 'bob', token }: ChatBoxProps) {
-  const [messages, setMessages] = useState<VerifiedChatMessage[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function ChatBox({
+  me,
+  to = 'budi',
+  token,
+  receiverPublicKeyPem,
+  initialMessages = [],
+  loadingHistory = false,
+}: ChatBoxProps) {
+  const [loading, setLoading] = useState(loadingHistory);
+   
+   const [messages, setMessages] =
+     useState<VerifiedChatMessage[]>(initialMessages);
+  
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  
   useEffect(() => {
-    fetchChatHistory(to)
-      .then((hist) => setMessages(hist))
-      .catch(() => setMessages([]))
-      .finally(() => setLoading(false));
-  }, [to]);
+    setMessages(initialMessages);
+  }, [initialMessages]);
 
-  
   useEffect(() => {
-    initChatSocket(token?.toString());
+    setLoading(loadingHistory);
+  }, [loadingHistory]);
+
+  useEffect(() => {
+    initChatSocket(token?.toString(), me);
     const off = onIncomingMessage((msg) => {
-      
       if (
         (msg.sender_username === me && msg.receiver_username === to) ||
         (msg.sender_username === to && msg.receiver_username === me)
@@ -34,7 +42,6 @@ export default function ChatBox({ me, to = 'bob', token }: ChatBoxProps) {
     return off;
   }, [me, to]);
 
-  
   useEffect(() => {
     scrollRef.current?.scrollTo({
       top: scrollRef.current.scrollHeight,
@@ -42,7 +49,6 @@ export default function ChatBox({ me, to = 'bob', token }: ChatBoxProps) {
     });
   }, [messages]);
 
-  
   function appendLocal(text: string) {
     const optimistic: VerifiedChatMessage = {
       id: crypto.randomUUID(),
@@ -50,7 +56,7 @@ export default function ChatBox({ me, to = 'bob', token }: ChatBoxProps) {
       receiver_username: to,
       message: text,
       timestamp: new Date().toISOString(),
-      verified: false, 
+      verified: true,
     };
     setMessages((prev) => [...prev, optimistic]);
   }
@@ -65,7 +71,7 @@ export default function ChatBox({ me, to = 'bob', token }: ChatBoxProps) {
         {!loading &&
           messages.map((m) => (
             <ChatBubble
-              key={m.id}
+              key={`${m.timestamp}-${m.sender_username}-${m.receiver_username}`}
               message={m.message}
               sender={m.sender_username}
               isSender={m.sender_username === me}
@@ -74,7 +80,13 @@ export default function ChatBox({ me, to = 'bob', token }: ChatBoxProps) {
             />
           ))}
       </div>
-      <TypingBox me={me} to={to} onLocalAppend={appendLocal} />
+      <TypingBox
+        me={me}
+        to={to}
+        onLocalAppend={appendLocal}
+        token={token || ''}
+        receiverPublicKeyPem={receiverPublicKeyPem}
+      />
     </div>
   );
 }

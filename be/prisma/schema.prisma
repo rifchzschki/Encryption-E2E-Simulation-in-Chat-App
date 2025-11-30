@@ -67,7 +67,8 @@ model Message {
   messageHash String
   signatureR  String
   signatureS  String
-  timestamp   DateTime @default(now())
+  timestamp       DateTime   @default(now())
+  timestampRaw    String     @db.Text
 
   sender   User @relation("SentMessages", fields: [senderId], references: [id])
   receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])

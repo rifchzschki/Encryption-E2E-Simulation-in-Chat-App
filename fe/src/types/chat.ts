@@ -1,3 +1,5 @@
+import type { PublicKey } from "./auth";
+
 export interface OutgoingSignedEncryptedPayload {
     sender_username: string;
     receiver_username: string;
@@ -27,9 +29,12 @@ export interface VerifiedChatMessage {
 }
 
 export interface ChatBoxProps {
-    me: string;
-    to?: string;
-    token?: string;
+  me: string;
+  to?: string;
+  token?: string;
+  receiverPublicKeyPem?: PublicKey;
+  initialMessages?: VerifiedChatMessage[];
+  loadingHistory: boolean;
 }
 
 export interface ChatBubbleProps {
@@ -44,4 +49,6 @@ export interface TypingBoxProps {
     me: string;
     to: string;
     onLocalAppend?: (text: string) => void;
+    token: string;
+    receiverPublicKeyPem?: PublicKey;
 }

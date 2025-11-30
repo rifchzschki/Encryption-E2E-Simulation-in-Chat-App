@@ -30,7 +30,6 @@ const p256_CURVE: WeierstrassOpts<bigint> = /* @__PURE__ */ (() => ({
   ),
 }))();
 
-
 export function toHex(bytes: Uint8Array | string): string {
   const arr =
     typeof bytes === 'string'
@@ -94,15 +93,25 @@ export async function generateKeyPair(
     },
   };
 }
+const normalizePrivateKeyHex = (hex: string): string => {
+  const clean = hex.trim().replace(/^0x/i, '').toLowerCase();
+  if (!/^[0-9a-f]+$/.test(clean) || clean.length !== 64) {
+    throw new Error('Invalid private key hex (must be 64 hex chars)');
+  }
+  if (/^0+$/.test(clean)) {
+    throw new Error('Invalid private key value');
+  }
+  return clean;
+};
 
 export async function signNonce(
   privateKeyHex: string,
   nonceHex: string
 ): Promise<Signature> {
   const nonceBytes = fromHex(nonceHex);
-  const privateKeyBytes = fromHex(privateKeyHex);
-  
-  const ecdsaInstance = ecdsa(weierstrass(p256_CURVE), sha3_256); 
+  const privateKeyBytes = fromHex(normalizePrivateKeyHex(privateKeyHex));
+
+  const ecdsaInstance = ecdsa(weierstrass(p256_CURVE), sha3_256);
   const signatureBytes = ecdsaInstance.sign(nonceBytes, privateKeyBytes);
   const signature = ecdsaInstance.Signature.fromBytes(signatureBytes);
   return {
@@ -110,7 +119,7 @@ export async function signNonce(
     s: signature.s.toString(16).padStart(64, '0'),
   };
 }
-  
+
 function pemBody(pem: string) {
   return pem
     .replace(/-----BEGIN [^-]+-----/g, '')
@@ -145,30 +154,22 @@ export function hashMessage(parts: {
   receiver: string;
 }): string {
   const concat = `${parts.message}|${parts.timestamp}|${parts.sender}|${parts.receiver}`;
-  // return sha3_256(utf8ToBytes(concat));
-  return concat;
+  return toHex(sha3_256(utf8ToBytes(concat)));
 }
 
-export async function importPrivateKey(pem: string): Promise<CryptoKey> {
-  const raw = b64ToBytes(pemBody(pem));
-  return crypto.subtle.importKey(
-    'pkcs8',
-    raw.buffer,
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    false,
-    ['sign']
-  );
-}
-
-export async function importPublicKey(pem: string): Promise<CryptoKey> {
-  const raw = b64ToBytes(pemBody(pem));
-  return crypto.subtle.importKey(
-    'spki',
-    raw.buffer,
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    false,
-    ['verify']
-  );
+export async function signHashHex(
+  privateKeyHex: string,
+  hashHex: string
+): Promise<Signature> {
+  const hashBytes = fromHex(hashHex);
+  const privBytes = fromHex(normalizePrivateKeyHex(privateKeyHex));
+  const ecdsaInstance = ecdsa(weierstrass(p256_CURVE), sha3_256);
+  const signatureBytes = ecdsaInstance.sign(hashBytes, privBytes);
+  const signature = ecdsaInstance.Signature.fromBytes(signatureBytes);
+  return {
+    r: signature.r.toString(16).padStart(64, '0'),
+    s: signature.s.toString(16).padStart(64, '0'),
+  };
 }
 
 export async function signHash(
@@ -185,21 +186,23 @@ export async function signHash(
   return derToRS(new Uint8Array(signature));
 }
 
+
 export async function verifySignature(
-  publicKey: CryptoKey,
+  publicKey: { x: string; y: string },
   hexHash: string,
   rHex: string,
   sHex: string
 ): Promise<boolean> {
-  const hashBytes = hexToBytes(hexHash);
-  const digest = await crypto.subtle.digest('SHA-256', hashBytes.buffer);
-  const der = rsToDer(rHex, sHex);
-  return crypto.subtle.verify(
-    { name: 'ECDSA', hash: { name: 'SHA-256' } },
-    publicKey,
-    der,
-    digest
+  const hashBytes = fromHex(hexHash);
+  const Curve = weierstrass(p256_CURVE);
+  const ecdsaInstance = ecdsa(Curve, sha3_256);
+  const signatureBytes = fromHex(
+    `${normalizeHex64(rHex)}${normalizeHex64(sHex)}`
   );
+  const pubBytes = fromHex(
+    `04${normalizeHex64(publicKey.x)}${normalizeHex64(publicKey.y)}`
+  );
+  return ecdsaInstance.verify(signatureBytes, hashBytes, pubBytes);
 }
 
 function derToRS(der: Uint8Array): { r: string; s: string } {
@@ -220,66 +223,106 @@ function derToRS(der: Uint8Array): { r: string; s: string } {
 }
 
 function rsToDer(rHex: string, sHex: string): ArrayBuffer {
-  const r = hexToBytes(rHex)
-  const s = hexToBytes(sHex)
+  const r = hexToBytes(rHex);
+  const s = hexToBytes(sHex);
   const encInt = (v: Uint8Array) => {
-    const pad = v.length > 0 && (v[0] & 0x80) ? 1 : 0
-    const out = new Uint8Array(2 + pad + v.length)
-    out[0] = 0x02
-    out[1] = pad + v.length
-    if (pad) out[2] = 0x00
-    out.set(v, 2 + pad)
-    return out
-  }
-  const rInt = encInt(r)
-  const sInt = encInt(s)
-  const out = new Uint8Array(2 + rInt.length + sInt.length)
-  out[0] = 0x30
-  out[1] = rInt.length + sInt.length
-  out.set(rInt, 2)
-  out.set(sInt, 2 + rInt.length)
-  return out.buffer
+    const pad = v.length > 0 && v[0] & 0x80 ? 1 : 0;
+    const out = new Uint8Array(2 + pad + v.length);
+    out[0] = 0x02;
+    out[1] = pad + v.length;
+    if (pad) out[2] = 0x00;
+    out.set(v, 2 + pad);
+    return out;
+  };
+  const rInt = encInt(r);
+  const sInt = encInt(s);
+  const out = new Uint8Array(2 + rInt.length + sInt.length);
+  out[0] = 0x30;
+  out[1] = rInt.length + sInt.length;
+  out.set(rInt, 2);
+  out.set(sInt, 2 + rInt.length);
+  return out.buffer;
+}
+const base64Url = (bytes: Uint8Array) =>
+  btoa(String.fromCharCode(...bytes))
+    .replace(/=+$/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+
+
+const importPrivateKeyHex = async (hex: string, usages: KeyUsage[]) => {
+  const clean = hex.trim().toLowerCase();
+  if (!/^[0-9a-f]{64}$/.test(clean)) throw new Error('Invalid private key hex');
+
+  const dBytes = Uint8Array.from(
+    clean.match(/.{2}/g)!.map((b) => parseInt(b, 16))
+  );
+  const Point = weierstrass(p256_CURVE);
+  const pub = Point.BASE.multiply(Point.Fn.fromBytes(dBytes));
+  const xBytes = fromHex(normalizeHex64(pub.x.toString(16)));
+  const yBytes = fromHex(normalizeHex64(pub.y.toString(16)));
+
+  const jwk: JsonWebKey = {
+    kty: 'EC',
+    crv: 'P-256',
+    d: base64Url(dBytes),
+    x: base64Url(xBytes),
+    y: base64Url(yBytes),
+    ext: true,
+  };
+
+  const algo = usages.includes('sign')
+    ? { name: 'ECDSA', namedCurve: 'P-256' }
+    : { name: 'ECDH', namedCurve: 'P-256' };
+
+  return crypto.subtle.importKey('jwk', jwk, algo, false, usages);
+};
+
+
+function toB64Url(bytes: Uint8Array): string {
+  let bin = '';
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/=+$/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+export async function importPublicKeyFromXY(
+  xHex: string,
+  yHex: string
+): Promise<CryptoKey> {
+  const jwk: JsonWebKey = {
+    kty: 'EC',
+    crv: 'P-256',
+    x: toB64Url(fromHex(normalizeHex64(xHex))),
+    y: toB64Url(fromHex(normalizeHex64(yHex))),
+    ext: true,
+  };
+  return crypto.subtle.importKey(
+    'jwk',
+    jwk,
+    { name: 'ECDSA', namedCurve: 'P-256' },
+    false,
+    ['verify']
+  );
 }
 
-async function importPublicKeyECDH(pem: string): Promise<CryptoKey> {
-  const raw = b64ToBytes(pemBody(pem));
-  return crypto.subtle.importKey(
-    'spki',
-    raw.buffer,
+
+export const eccEncrypt = async (
+  message: string,
+  publicKey: { x: string; y: string }
+) => {
+  const receiver = await crypto.subtle.importKey(
+    'raw',
+    toArrayBuffer(xyToPoint(publicKey.x, publicKey.y)),
     { name: 'ECDH', namedCurve: 'P-256' },
     false,
     []
   );
-}
-
-async function importPrivateKeyECDH(pem: string): Promise<CryptoKey> {
-  const raw = b64ToBytes(pemBody(pem));
-  return crypto.subtle.importKey(
-    'pkcs8',
-    raw.buffer,
-    { name: 'ECDH', namedCurve: 'P-256' },
-    false,
-    ['deriveBits']
-  );
-}
-
-async function exportSpkiB64(key: CryptoKey): Promise<string> {
-  const spki = await crypto.subtle.exportKey('spki', key);
-  return bytesToB64(new Uint8Array(spki));
-}
-
-export async function eccEncrypt(
-  message: string,
-  receiverPublicKeyPem: string
-): Promise<string> {
-  const receiverPub = await importPublicKeyECDH(receiverPublicKeyPem);
   const eph = await crypto.subtle.generateKey(
     { name: 'ECDH', namedCurve: 'P-256' },
     true,
     ['deriveBits']
   );
   const shared = await crypto.subtle.deriveBits(
-    { name: 'ECDH', public: receiverPub },
+    { name: 'ECDH', public: receiver },
     eph.privateKey,
     256
   );
@@ -294,35 +337,35 @@ export async function eccEncrypt(
     ['encrypt']
   );
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const ctBuf = await crypto.subtle.encrypt(
+  const ct = await crypto.subtle.encrypt(
     { name: 'AES-GCM', iv },
     aesKey,
     new TextEncoder().encode(message)
   );
-  const payload = {
-    iv: bytesToB64(iv),
-    ct: bytesToB64(new Uint8Array(ctBuf)),
-    epk: await exportSpkiB64(eph.publicKey),
-  };
-  return btoa(JSON.stringify(payload));
-}
+  const epk = await crypto.subtle.exportKey('raw', eph.publicKey);
+  return btoa(
+    JSON.stringify({
+      iv: bytesToB64(iv),
+      ct: bytesToB64(new Uint8Array(ct)),
+      epk: bytesToB64(new Uint8Array(epk)),
+    })
+  );
+};
 
-export async function eccDecrypt(encoded: string): Promise<string> {
-  const raw = JSON.parse(atob(encoded));
-  const iv = b64ToBytes(raw.iv);
-  const ct = b64ToBytes(raw.ct);
-  const epk = await crypto.subtle.importKey(
-    'spki',
-    b64ToBytes(raw.epk).buffer,
+export const eccDecrypt = async (payload: string, privateKeyHex: string) => {
+  const { iv, ct, epk } = JSON.parse(atob(payload));
+  const epkKey = await crypto.subtle.importKey(
+    'raw',
+    toArrayBuffer(b64ToBytes(epk)),
     { name: 'ECDH', namedCurve: 'P-256' },
     false,
     []
   );
-  const privPem = localStorage.getItem('privateKey') || '';
-  const priv = await importPrivateKeyECDH(privPem);
+  console.log(privateKeyHex)
+  const privKey = await importPrivateKeyHex(privateKeyHex, ['deriveBits']);
   const shared = await crypto.subtle.deriveBits(
-    { name: 'ECDH', public: epk },
-    priv,
+    { name: 'ECDH', public: epkKey },
+    privKey,
     256
   );
   const keyBytes = new Uint8Array(
@@ -335,10 +378,87 @@ export async function eccDecrypt(encoded: string): Promise<string> {
     false,
     ['decrypt']
   );
-  const pt = await crypto.subtle.decrypt(
-    { name: 'AES-GCM', iv },
+  const plain = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: b64ToBytes(iv) },
     aesKey,
-    ct.buffer
+    b64ToBytes(ct).buffer
   );
-  return new TextDecoder().decode(pt);
-}
+  return new TextDecoder().decode(plain);
+};
+
+
+const toArrayBuffer = (u8: Uint8Array) => {
+  const buf = new ArrayBuffer(u8.length);
+  new Uint8Array(buf).set(u8);
+  return buf;
+};
+
+const normalizeHex64 = (hex: string) => {
+  const clean = hex.replace(/^0x/i, '').toLowerCase();
+  return clean.length > 64 ? clean.slice(-64) : clean.padStart(64, '0');
+};
+
+const xyToPoint = (x: string, y: string) => {
+  const px = hexToBytes(normalizeHex64(x));
+  const py = hexToBytes(normalizeHex64(y));
+  if (px.length !== 32 || py.length !== 32)
+    throw new Error('Invalid P-256 key');
+  const out = new Uint8Array(65);
+  out[0] = 0x04;
+  out.set(px, 1);
+  out.set(py, 33);
+  return out;
+};
+
+const derLen = (len: number) => {
+  if (len < 0x80) return new Uint8Array([len]);
+  const bytes: number[] = [];
+  while (len > 0) {
+    bytes.unshift(len & 0xff);
+    len >>= 8;
+  }
+  return new Uint8Array([0x80 | bytes.length, ...bytes]);
+};
+
+const derSeq = (inner: Uint8Array) =>
+  new Uint8Array([0x30, ...derLen(inner.length), ...inner]);
+const derOid = (oid: number[]) => {
+  const first = oid[0] * 40 + oid[1];
+  const out: number[] = [first];
+  for (let i = 2; i < oid.length; i++) {
+    let v = oid[i];
+    const tmp: number[] = [];
+    do {
+      tmp.unshift(v & 0x7f);
+      v >>= 7;
+    } while (v > 0);
+    for (let j = 0; j < tmp.length - 1; j++) tmp[j] |= 0x80;
+    out.push(...tmp);
+  }
+  return new Uint8Array([0x06, ...derLen(out.length), ...out]);
+};
+const derInt = (bytes: Uint8Array) => {
+  if (bytes[0] & 0x80) bytes = new Uint8Array([0x00, ...bytes]);
+  return new Uint8Array([0x02, ...derLen(bytes.length), ...bytes]);
+};
+const derOctet = (bytes: Uint8Array) =>
+  new Uint8Array([0x04, ...derLen(bytes.length), ...bytes]);
+const buildECPrivateKey = (dHex: string) =>
+  derSeq(
+    new Uint8Array([
+      ...derInt(new Uint8Array([0x01])),
+      ...derOctet(hexToBytes(dHex)),
+    ])
+  );
+const buildPKCS8FromD = (dHex: string) => {
+  const alg = derSeq(
+    new Uint8Array([
+      ...derOid([1, 2, 840, 10045, 2, 1]),
+      ...derOid([1, 2, 840, 10045, 3, 1, 7]),
+    ])
+  );
+  const version = derInt(new Uint8Array([0x00]));
+  return derSeq(
+    new Uint8Array([...version, ...alg, ...derOctet(buildECPrivateKey(dHex))])
+  );
+};

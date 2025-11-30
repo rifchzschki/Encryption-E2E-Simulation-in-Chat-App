@@ -1,4 +1,5 @@
-import type { Token } from '../types/auth';
+import { use } from 'react';
+import type { PublicKey, Token } from '../types/auth';
 import { ApiClient } from './api';
 
 export class UserApi extends ApiClient {
@@ -6,12 +7,15 @@ export class UserApi extends ApiClient {
         super(import.meta.env.VITE_PROTECTED_BASE_URL, token);
     }
     async fetchMe(): Promise<{ username: string }> {
-        return this.get('/me');
+        return this.get('/me', { withCredentials: true });
     }
     async fetchPublicKey(
         username: string
-    ): Promise<{ username: string; public_key_pem: string }> {
-        return this.get(`/users/${username}/public-key`);
+    ): Promise<{ username: string; publicKeyHex: PublicKey }> {
+        // console.log(username)
+        return this.get(`/users/${username}/public-key`, {
+          withCredentials: true,
+        });
     }
     async fetchMessages(
         username: string
@@ -22,17 +26,23 @@ export class UserApi extends ApiClient {
         ciphertext: string;
         timestamp: string;
     }>> {
-        return this.get(`/users/${username}/messages`);
+        return this.get(`/users/${username}/messages`, {
+          withCredentials: true,
+        });
     }
     async fetchFriends(
         username: string
     ): Promise<Array<{ id: number; username: string; avatar_url: string }>> {
-        return this.get(`/friends/${username}`);
+        return this.get(`/friends/${username}`, { withCredentials: true });
     }
     async addFriend(
         username: string,
         friendUsername: string
     ): Promise<{ id: number; username: string; avatar_url: string }> {
-        return this.post('/friends', { username: username , friendUsername: friendUsername });
+        return this.post(
+          '/friends',
+          { username: username, friendUsername: friendUsername },
+          { withCredentials: true }
+        );
     }
 }
