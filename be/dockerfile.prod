@@ -1,0 +1,24 @@
+FROM docker.io/golang:1.25.1-alpine as builder
+
+WORKDIR /app
+
+RUN apk add --no-cache git build-base
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN go run github.com/steebchen/prisma-client-go generate
+
+RUN go build -o backend .
+
+FROM alpine:latest
+
+WORKDIR /app
+
+COPY --from=builder /app/backend .
+
+EXPOSE 9000
+
+CMD ["./backend"]
