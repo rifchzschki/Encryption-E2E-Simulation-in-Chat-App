@@ -1,73 +1,65 @@
-# React + TypeScript + Vite
+# Encryption E2E Simulation – Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend React untuk simulasi enkripsi end‑to‑end (E2E) pada chat app. Menyediakan UI chat realtime, autentikasi, kontak, dan integrasi WebSocket + REST API ke backend.
 
-Currently, two official plugins are available:
+## Tech Stack
+- React `^19`
+- Vite `^7` (dev server & build)
+- TypeScript `~5.9`
+- Zustand (state management)
+- Axios (HTTP client)
+- React Router `^7`
+- Tailwind CSS `^4` + `@tailwindcss/vite` (utility-first styling)
+- MUI (`@mui/material`, `@mui/icons-material`)
+- Crypto libs: `@noble/*`, `argon2-browser`, `js-sha3`
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Dependensi
+Lihat `fe/package.json` untuk daftar lengkap. Ringkasnya:
+- Runtime: `react`, `react-dom`, `react-router`, `zustand`, `axios`, `tailwindcss`, `@tailwindcss/vite`, `@mui/*`, `@emotion/*`, crypto libs.
+- Dev: `vite`, `@vitejs/plugin-react-swc`, `typescript`, `eslint` dan plugins.
 
-## React Compiler
+## Environment
+Buat `.env` berdasarkan `fe/.env.example`. Contoh:
+```
+VITE_API_BASE_URL=http://localhost:8080/api
+VITE_PROTECTED_BASE_URL=http://localhost:8080/api/protected
+```
+Variabel ini digunakan oleh `src/services/*` dan `src/utils/env.ts` untuk konfigurasi endpoint.
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+## Menjalankan Aplikasi
 
-## Expanding the ESLint configuration
+Pastikan PNPM terpasang, atau ganti `pnpm` dengan `npm` sesuai preferensi.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+```powershell
+cd Encryption-E2E-Simulation-in-Chat-App\fe
+pnpm install
+pnpm dev
+```
+Akses dev server: `http://localhost:5173` (default Vite). Untuk port khusus, atur di `vite.config.ts`.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Build & Preview
+```powershell
+pnpm build
+pnpm preview
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Struktur Direktori (ringkas)
 ```
+fe/
+	src/
+		Pages/            # Halaman app & auth
+		components/       # UI komponen chat, kontak, layout
+		context/          # AuthContext
+		services/         # API client, auth, chatSocket
+		stores/           # Zustand stores (notifikasi, dsb.)
+		types/            # Tipe data (auth, chat)
+		utils/            # Helper (crypto, env, auth)
+	index.html
+	vite.config.ts
+	tsconfig*.json
+```
+
+## Catatan Integrasi Backend
+- Pastikan backend berjalan di port sesuai `VITE_API_BASE_URL` dan `VITE_PROTECTED_BASE_URL`.
+- Endpoint HTTP/WS dihubungkan melalui `src/services/api.ts` dan `src/services/chatSocket.ts`.
+
