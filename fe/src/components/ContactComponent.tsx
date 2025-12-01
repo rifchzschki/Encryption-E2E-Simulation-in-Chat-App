@@ -50,7 +50,7 @@ export default function ContactComponent({ contact }: ContactListProps) {
               <Typography className="font-semibold truncate">
                 {contact.username}
               </Typography>
-              <Typography className="text-gray-500 text-sm truncate max-w-[150px]">
+              <Typography className="text-gray-500 text-sm truncate max-w-9/10 ">
                 {meta?.latestMessage || 'Start chatting'}
               </Typography>
             </div>
