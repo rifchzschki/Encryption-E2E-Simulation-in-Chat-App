@@ -156,3 +156,33 @@ func (us *UserService) AddFriend(ctx *gin.Context, username, friendUsername stri
 
 	return friendship, nil
 }
+
+func (us *UserService) DeleteFriend(ctx *gin.Context, username, friendUsername string) error {
+	user, err := us.GetUserByUsername(ctx, username)
+	if err != nil {
+		return fmt.Errorf("user not found: %w", err)
+	}
+	friend, err := us.GetUserByUsername(ctx, friendUsername)
+	if err != nil {
+		return fmt.Errorf("friend user not found: %w", err)
+	}
+	
+	user1 := user.ID
+	user2 := friend.ID
+	if user1 > user2 {
+		user1, user2 = user2, user1
+	}
+	
+	_, err = us.prismaClient.UserFriend.FindUnique(
+		db.UserFriend.User1IDUser2ID(
+			db.UserFriend.User1ID.Equals(user1),
+			db.UserFriend.User2ID.Equals(user2),
+		),
+	).Delete().Exec(ctx)
+	
+	if err != nil {
+		return fmt.Errorf("failed to delete friendship: %w", err)
+	}
+	
+	return nil
+}

@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,10 +13,11 @@ import (
 type UserController struct {
 	userService *services.UserService
 	chatService *services.ChatService
+	socketController *SocketController
 }
 
-func NewUserController(us *services.UserService, cs *services.ChatService) *UserController {
-	return &UserController{userService: us, chatService: cs}
+func NewUserController(us *services.UserService, cs *services.ChatService, socketController *SocketController) *UserController {
+	return &UserController{userService: us, chatService: cs, socketController: socketController}
 }
 
 func (u *UserController) GetPublicKey(c *gin.Context) {
@@ -89,11 +91,32 @@ func (u *UserController) AddFriendHandler(c *gin.Context) {
 		return
 	}
 
+	fmt.Printf("New friendship created: %+v\n", friendship)
+
+	u.socketController.SendFriendNotification(r.Username, r.FriendUsername, friendship.ID)
+
 	c.JSON(http.StatusCreated, gin.H{
 		"id":           friendship.ID,
 		"userID":       friendship.User1ID,
 		"friendUserID": friendship.User2ID,
 	})
+}
+func (u *UserController) DeleteFriendHandler(c *gin.Context) {
+	username := c.Param("username")
+	friendUsername := c.Param("friend_username")
+	if username == "" || friendUsername == "" {
+		c.Status(http.StatusBadRequest)
+		return
+	}
+
+	err := u.userService.DeleteFriend(c, username, friendUsername)
+	if err != nil {
+		types.FailResponse(c, http.StatusInternalServerError, err.Error(), err.Error())
+		return
+	}
+
+	u.socketController.SendUnfriendNotification(username, friendUsername)
+	c.Status(http.StatusOK)
 }
 
 func (u *UserController) GetFriendsHandler(c *gin.Context) {
