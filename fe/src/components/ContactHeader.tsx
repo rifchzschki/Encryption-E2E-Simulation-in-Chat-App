@@ -1,4 +1,4 @@
-import { Add, Delete, Menu } from '@mui/icons-material';
+import { Add, Menu } from '@mui/icons-material';
 import SearchIcon from '@mui/icons-material/Search';
 import {
   Button,
@@ -26,10 +26,7 @@ export default function ContactHeader({
 }: ContactHeaderProps) {
   const [showSearch, setShowSearch] = React.useState(false);
   const [showAddContact, setShowAddContact] = React.useState(false);
-  const [showdeleteContactUsername, setShowDeleteContactUsername] =
-    React.useState(false);
   const [newContactUsername, setNewContactUsername] = React.useState('');
-  const [deleteContactUsername, setDeleteContactUsername] = React.useState('');
   const { username, setLoading, token, setToken } = useAuth();
   const { show } = useNotificationStore();
   const navigate = useNavigate();
@@ -80,34 +77,6 @@ export default function ContactHeader({
     }
   };
 
-  const handleDeleteFriend = async () => {
-    if (!deleteContactUsername.trim()) return;
-
-    setLoading(true);
-    try {
-      if (!username) throw new Error('Username not found');
-      await new UserApi(token)
-        .deleteFriend(username, deleteContactUsername.trim())
-        .then(() => {
-          show(`Deleted ${deleteContactUsername} from friends`, 'success');
-          setDeleteContactUsername('');
-        })
-        .catch((err) => {
-          show(err.message, 'error');
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        show(err.message || 'Failed to delete friend', 'error');
-      } else {
-        show('Failed to delete friend', 'error');
-      }
-      setLoading(false);
-    }
-  };
-
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       handleAddFriend();
@@ -122,7 +91,6 @@ export default function ContactHeader({
     setAnchorEl(event.currentTarget);
     setSearchQuery('');
     setShowAddContact(false);
-    setShowDeleteContactUsername(false);
     setShowSearch(false);
   };
 
@@ -169,18 +137,6 @@ export default function ContactHeader({
                 <Add className="text-blue-500" />
                 <Typography variant="body2" color="textPrimary">
                   Add Contact
-                </Typography>
-              </div>
-              <div
-                onClick={() => {
-                  setShowDeleteContactUsername((prev) => !prev);
-                  setAnchorEl(null);
-                }}
-                className="flex flex-row gap-1 w-full items-start cursor-pointer mb-2 hover:bg-gray-100 p-1 rounded-md transition-colors duration-300 ease-in-out"
-              >
-                <Delete className="text-blue-500 rotate-45" />
-                <Typography variant="body2" color="textPrimary">
-                  Delete Contact
                 </Typography>
               </div>
               <Button onClick={handleLogout}>Logout</Button>
@@ -243,23 +199,6 @@ export default function ContactHeader({
           />
           <Button variant="contained" onClick={handleAddFriend}>
             Add
-          </Button>
-        </div>
-      )}
-
-      {showdeleteContactUsername && (
-        <div className="p-2 bg-white flex gap-2">
-          <TextField
-            fullWidth
-            size="small"
-            placeholder="Delete contact by username..."
-            value={deleteContactUsername}
-            onChange={(e) => setDeleteContactUsername(e.target.value)}
-            onKeyDown={handleKeyPress}
-            className="rounded-md"
-          />
-          <Button variant="contained" onClick={handleDeleteFriend}>
-            Delete
           </Button>
         </div>
       )}
