@@ -98,7 +98,6 @@ func (cs *ChatService) ListHistory(ctx context.Context, a, b string) ([]types.In
             Timestamp: m.TimestampRaw,
         })
     }
-	fmt.Println("History", out)
     return out, nil
 }
 

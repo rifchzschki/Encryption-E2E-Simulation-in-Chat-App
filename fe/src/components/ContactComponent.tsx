@@ -4,6 +4,7 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemButton,
+  Skeleton,
   Typography,
 } from '@mui/material';
 import { useChatMetaStore } from '../stores/useChatMetadataStore';
@@ -17,6 +18,7 @@ export default function ContactComponent({ contact }: ContactListProps) {
   const { setReceiver } = useReceiverStore();
   const { metas, resetUnread } = useChatMetaStore();
   const meta = metas[contact.username];
+  const {loading} = useChatMetaStore()
 
   const formattedTime = meta?.latestTimestamp
     ? new Date(meta.latestTimestamp).toLocaleTimeString('id-ID', {
@@ -52,7 +54,7 @@ export default function ContactComponent({ contact }: ContactListProps) {
                 {contact.username}
               </Typography>
               <Typography className="text-gray-500 text-sm truncate max-w-full">
-                {meta?.latestMessage || 'Start chatting'}
+                {loading ? (<Skeleton animation="wave" />) : meta?.latestMessage }
               </Typography>
             </div>
 

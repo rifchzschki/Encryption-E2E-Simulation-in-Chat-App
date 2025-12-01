@@ -20,7 +20,6 @@ func NewUserService(client *db.PrismaClient) *UserService {
 }
 
 func (us *UserService) CreateUser(ctx *gin.Context, username string, publicKeyHex types.PublicKey) (*db.UserModel, error) {
-	fmt.Println("from user service", publicKeyHex.Ecdh)
 	user, err := us.prismaClient.User.CreateOne(
 		db.User.Username.Set(username),
 		db.User.PublicKeyX.Set(publicKeyHex.X),

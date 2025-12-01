@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -26,7 +25,6 @@ func (cc *ChatController) GetChatMetadata(c *gin.Context) {
 		})
 		return
 	}
-	fmt.Println(metadata)
 
 	c.JSON(http.StatusOK, metadata)
 }

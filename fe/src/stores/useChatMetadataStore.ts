@@ -18,10 +18,15 @@ interface ChatMetaStore {
       unreadCount: number;
     }[]
   ) => void;
+  loading: boolean;
+  setLoading: (val: boolean)=>void;
 }
 
 export const useChatMetaStore = create<ChatMetaStore>((set) => ({
   metas: {},
+  loading: true,
+
+  setLoading: (val) => set({loading: val}),
 
   updateMeta: (username, msg, timestamp) =>
     set((state) => ({
@@ -57,4 +62,6 @@ export const useChatMetaStore = create<ChatMetaStore>((set) => ({
     });
     set({ metas }); 
   },
+
+  
 }));

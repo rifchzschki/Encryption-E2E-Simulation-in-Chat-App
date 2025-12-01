@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -91,7 +90,6 @@ func (u *UserController) AddFriendHandler(c *gin.Context) {
 		return
 	}
 
-	fmt.Printf("New friendship created: %+v\n", friendship)
 
 	u.socketController.SendFriendNotification(r.Username, r.FriendUsername, friendship.ID)
 

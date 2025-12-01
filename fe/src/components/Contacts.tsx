@@ -1,12 +1,13 @@
-import { useEffect, useState, useCallback } from 'react';
 import { List } from '@mui/material';
-import ContactList from '../components/ContactList';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import ContactHeader from '../components/ContactHeader';
 import { useAuth } from '../context/AuthContext';
+import { onFriendListChanged } from '../services/chatSocket';
 import { UserApi } from '../services/user';
 import { useNotificationStore } from '../stores/useNotificationStore';
-import { useMemo } from 'react';
-import { onFriendListChanged } from '../services/chatSocket';
+import { useChatMetaStore } from '../stores/useChatMetadataStore';
+import { resolveBulkMetadataEncryption } from '../utils/ecc-ecdh';
+import ContactComponent from './ContactComponent';
 
 interface Friend {
   id: number;
@@ -16,7 +17,7 @@ interface Friend {
 function Contacts() {
   const { username, token } = useAuth();
   const { show } = useNotificationStore();
-
+  const { setMetadataBulk, setLoading } = useChatMetaStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [friends, setFriends] = useState<Friend[]>([]);
 
@@ -46,7 +47,6 @@ function Contacts() {
   useEffect(() => {
     const unsubscribe = onFriendListChanged((notification) => {
       if (notification.data.friendship_id === null) {
-        console.log(`${notification.data.username} removed you as a friend!`);
         show(
           `${notification.data.username} removed you as a friend!`,
           'warning'
@@ -54,7 +54,6 @@ function Contacts() {
         fetchFriends();
         return;
       } else {
-        console.log(`${notification.data.username} added you as a friend!`);
         show(`${notification.data.username} added you as a friend!`, 'success');
         fetchFriends();
       }
@@ -66,6 +65,38 @@ function Contacts() {
   const filteredFriends = friends.filter((friend) =>
     friend.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  useEffect(() => {
+    if (!token) return;
+
+    const priv = localStorage.getItem('privateKeyEcdh');
+    if (!priv) return;
+
+    async function load() {
+      try {
+        setLoading(true);
+
+        const items = await new UserApi(token).fetchChatMetadata();
+
+        setMetadataBulk(
+          items.map((it) => ({
+            contact: it.username,
+            latestMessage: it.last_message,
+            latestTimestamp: it.last_timestamp,
+            unreadCount: 0,
+          }))
+        );
+
+        await resolveBulkMetadataEncryption(token as string, priv as string);
+      } catch (err) {
+        console.error('Failed metadata fetch', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+  }, [token]);
 
   return (
     <div className="">
@@ -79,7 +110,9 @@ function Contacts() {
         <div className="grow overflow-y-auto">
           <List className="p-0">
             {filteredFriends.map((friend) => (
-              <ContactList key={friend.id} contact={friend} />
+              <React.Fragment key={friend.username}>
+                <ContactComponent contact={friend} />
+              </React.Fragment>
             ))}
           </List>
         </div>
