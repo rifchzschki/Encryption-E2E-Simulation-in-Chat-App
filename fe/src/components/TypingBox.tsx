@@ -1,10 +1,10 @@
-import { useState } from 'react'
-import { hashMessage, signHashHex, fromHex } from '../utils/crypto'
-import { sendRaw } from '../services/chatSocket'
-import type { TypingBoxProps } from '../types/chat'
+import SendRoundedIcon from '@mui/icons-material/SendRounded';
+import IconButton from '@mui/material/IconButton';
+import { useEffect, useRef, useState } from 'react';
+import { sendRaw } from '../services/chatSocket';
+import type { TypingBoxProps } from '../types/chat';
+import { fromHex, hashMessage, signHashHex } from '../utils/crypto';
 import { encryptMessage } from '../utils/ecc-ecdh';
-
-
 
 export default function TypingBox({
   me,
@@ -14,11 +14,21 @@ export default function TypingBox({
 }: TypingBoxProps) {
   const [value, setValue] = useState('');
   const [sending, setSending] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const ta = textareaRef.current;
+    if (ta) {
+      ta.style.height = 'auto';
+      ta.style.height = ta.scrollHeight + 'px';
+    }
+  }, [value]);
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     if (!value.trim() || sending) return;
     setSending(true);
+
     const timestamp = new Date().toISOString();
     const hash = hashMessage({
       message: value,
@@ -26,15 +36,24 @@ export default function TypingBox({
       sender: me,
       receiver: to,
     });
+
     const pem = localStorage.getItem('privateKey');
-    if (!pem || !receiverPublicKeyPem?.x || !receiverPublicKeyPem?.y) {
+    const mySecret = localStorage.getItem('privateKeyEcdh');
+
+    if (!pem || !mySecret || !receiverPublicKeyPem?.ecdh) {
+      console.warn('Missing keys!');
       setSending(false);
       return;
     }
+
     try {
       const signature = await signHashHex(pem, hash);
-      const priv = localStorage.getItem("privateKeyEcdh")
-      const encrypted = await encryptMessage(fromHex(priv as string), fromHex(receiverPublicKeyPem.ecdh as string), value)
+      const encrypted = await encryptMessage(
+        fromHex(mySecret),
+        fromHex(receiverPublicKeyPem.ecdh),
+        value
+      );
+
       sendRaw({
         sender_username: me,
         receiver_username: to,
@@ -43,6 +62,7 @@ export default function TypingBox({
         signature,
         timestamp,
       });
+
       onLocalAppend?.(value);
       setValue('');
     } finally {
@@ -51,20 +71,39 @@ export default function TypingBox({
   }
 
   return (
-    <form onSubmit={handleSend} className="p-2 border-t flex gap-2 bg-gray-50">
-      <input
+    <form
+      onSubmit={handleSend}
+      className="flex items-end gap-2 px-3 py-2 border-t border-gray-400 bg-white shadow-sm"
+    >
+      <textarea
+        ref={textareaRef}
+        rows={1}
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        placeholder="Type message..."
-        className="flex-1 px-3 py-2 text-sm border rounded focus:outline-none focus:ring focus:ring-blue-300"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && e.ctrlKey) {
+            e.preventDefault();
+            handleSend(e);
+          }
+        }}
+        placeholder="Type a message..."
+        className="flex-1 resize-none overflow-hidden px-4 py-3 rounded-full bg-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+        disabled={sending}
       />
-      <button
+
+      <IconButton
         type="submit"
         disabled={!value.trim() || sending}
-        className="px-4 py-2 text-sm rounded bg-blue-600 text-white disabled:opacity-50"
+        sx={{
+          backgroundColor: '#2563eb',
+          color: 'white',
+          padding: '8px',
+          '&:hover': { backgroundColor: '#1e40af' },
+          opacity: !value.trim() || sending ? 0.6 : 1,
+        }}
       >
-        {sending ? 'Sending...' : 'Send'}
-      </button>
+        <SendRoundedIcon fontSize="small" />
+      </IconButton>
     </form>
   );
 }

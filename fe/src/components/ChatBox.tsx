@@ -2,31 +2,25 @@ import { useEffect, useRef, useState } from 'react';
 import ChatBubble from './ChatBubble';
 import TypingBox from './TypingBox';
 import { initChatSocket, onIncomingMessage } from '../services/chatSocket';
-import type { VerifiedChatMessage,ChatBoxProps } from '../types/chat';
-
+import type { VerifiedChatMessage, ChatBoxProps } from '../types/chat';
+import { CircularProgress, Typography } from '@mui/material';
 
 export default function ChatBox({
   me,
-  to = 'budi',
+  to,
   token,
   receiverPublicKeyPem,
   initialMessages = [],
   loadingHistory = false,
 }: ChatBoxProps) {
   const [loading, setLoading] = useState(loadingHistory);
-   
-   const [messages, setMessages] =
-     useState<VerifiedChatMessage[]>(initialMessages);
-  
+  const [messages, setMessages] =
+    useState<VerifiedChatMessage[]>(initialMessages);
+
   const scrollRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
-    setMessages(initialMessages);
-  }, [initialMessages]);
-
-  useEffect(() => {
-    setLoading(loadingHistory);
-  }, [loadingHistory]);
+  useEffect(() => setMessages(initialMessages), [initialMessages]);
+  useEffect(() => setLoading(loadingHistory), [loadingHistory]);
 
   useEffect(() => {
     initChatSocket(token?.toString(), me);
@@ -39,7 +33,7 @@ export default function ChatBox({
       }
     });
     return off;
-  }, [me, to]);
+  }, [me, to, token]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -52,7 +46,7 @@ export default function ChatBox({
     const optimistic: VerifiedChatMessage = {
       id: crypto.randomUUID(),
       sender_username: me,
-      receiver_username: to,
+      receiver_username: to as string,
       message: text,
       timestamp: new Date().toISOString(),
       verified: true,
@@ -60,17 +54,32 @@ export default function ChatBox({
     setMessages((prev) => [...prev, optimistic]);
   }
 
+  const isEmpty = !loading && messages.length === 0;
+
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-gray-100">
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-3 space-y-1 bg-white min-h-0"
+        className="flex-1 overflow-y-auto px-4 py-3 space-y-2 min-h-0"
       >
-        {loading && <div className="text-sm text-gray-400">Loading...</div>}
+        {loading && (
+          <div className="flex justify-center items-center h-full">
+            <CircularProgress size={34} />
+          </div>
+        )}
+
+        {isEmpty && (
+          <div className="flex justify-center items-center h-full text-center select-none">
+            <Typography variant="body2" className="text-gray-500">
+              Belum ada pesan. Mulai percakapan sekarang ✨
+            </Typography>
+          </div>
+        )}
+
         {!loading &&
           messages.map((m) => (
             <ChatBubble
-              key={`${m.timestamp}-${m.sender_username}-${m.receiver_username}`}
+              key={m.id ?? `${m.timestamp}-${m.sender_username}`}
               message={m.message}
               sender={m.sender_username}
               isSender={m.sender_username === me}
@@ -79,9 +88,10 @@ export default function ChatBox({
             />
           ))}
       </div>
+
       <TypingBox
         me={me}
-        to={to}
+        to={to as string}
         onLocalAppend={appendLocal}
         token={token || ''}
         receiverPublicKeyPem={receiverPublicKeyPem}

@@ -69,7 +69,7 @@ function Contacts() {
 
   return (
     <div className="">
-      <div className="flex flex-col border-r border-blue-300">
+      <div className="flex flex-col">
         <ContactHeader
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
