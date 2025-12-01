@@ -1,6 +1,6 @@
 import ChatComponent from '../components/ChatComponent';
 
-import Contacts from '../components/Contacts'; // Adjust the path if necessary
+import Contacts from '../components/Contacts'; 
 function App() {
   return (
     <>
@@ -10,7 +10,6 @@ function App() {
 
         </section>
         <section className=" w-2/3">
-          {/* <section>Profile Receiver Information</section> */}
           <section>
             <ChatComponent />
           </section>

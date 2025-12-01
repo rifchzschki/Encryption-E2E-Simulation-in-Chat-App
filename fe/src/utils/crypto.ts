@@ -8,7 +8,7 @@ import { sha3_256 } from '@noble/hashes/sha3.js';
 import { utf8ToBytes } from '@noble/hashes/utils.js';
 import type { KeyPair, Signature } from '../types/auth';
 
-const p256_CURVE: WeierstrassOpts<bigint> = /* @__PURE__ */ (() => ({
+export const p256_CURVE: WeierstrassOpts<bigint> = /* @__PURE__ */ (() => ({
   p: BigInt(
     '0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff'
   ),
@@ -40,7 +40,7 @@ export function toHex(bytes: Uint8Array | string): string {
     .join('');
 }
 
-const fromHex = (hex: string): Uint8Array => {
+export const fromHex = (hex: string): Uint8Array => {
   const bytes = new Uint8Array(hex.length / 2);
   for (let i = 0; i < bytes.length; i++) {
     bytes[i] = parseInt(hex.substr(i * 2, 2), 16);
@@ -79,9 +79,7 @@ export async function generateKeyPair(
   username: string,
   password: string
 ): Promise<KeyPair> {
-  const currentTime = Date.now();
   const kdfKey = await kdfArgon2(username, password);
-  console.log('KDF time:', Date.now() - currentTime);
   const privKey = kdfKey;
   const Point = weierstrass(p256_CURVE);
   const pubKey = Point.BASE.multiply(Point.Fn.fromBytes(privKey));
@@ -92,6 +90,14 @@ export async function generateKeyPair(
       y: bigIntToBytesHex(pubKey.y),
     },
   };
+}
+export async function generatePubFromPrivKey(priv: string){
+  const Point = weierstrass(p256_CURVE);
+  const pubKey = Point.BASE.multiply(Point.Fn.fromBytes(fromHex(priv)));
+  return {
+    x: bigIntToBytesHex(pubKey.x),
+    y: bigIntToBytesHex(pubKey.y)
+  }
 }
 const normalizePrivateKeyHex = (hex: string): string => {
   const clean = hex.trim().replace(/^0x/i, '').toLowerCase();
@@ -333,7 +339,6 @@ export const eccDecrypt = async (payload: string, privateKeyHex: string) => {
     false,
     []
   );
-  console.log(privateKeyHex)
   const privKey = await importPrivateKeyHex(privateKeyHex, ['deriveBits']);
   const shared = await crypto.subtle.deriveBits(
     { name: 'ECDH', public: epkKey },

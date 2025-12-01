@@ -22,7 +22,6 @@ function Contacts() {
   const userApi = useMemo(() => new UserApi(token), [token]);
 
   const fetchFriends = useCallback(async () => {
-    console.log(username)
     if (!username) return;
     try {
       const data = await userApi.fetchFriends(username);

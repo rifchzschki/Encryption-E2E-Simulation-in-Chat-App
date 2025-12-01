@@ -11,7 +11,6 @@ export class UserApi extends ApiClient {
     async fetchPublicKey(
         username: string
     ): Promise<{ username: string; publicKeyHex: PublicKey }> {
-        // console.log(username)
         return this.get(`/users/${username}/public-key`, {
           withCredentials: true,
         });

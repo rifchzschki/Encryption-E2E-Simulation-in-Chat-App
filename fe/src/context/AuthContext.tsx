@@ -33,7 +33,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const res = await new AuthService(token).refreshToken();
         setToken(res.access_token);
         setUsername(res.username);
-        console.log('Refresh Access Token Detected!');
       } catch (err) {
         show('Not authenticated', 'error');
         logout();

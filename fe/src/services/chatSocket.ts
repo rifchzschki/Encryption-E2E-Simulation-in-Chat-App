@@ -1,19 +1,32 @@
 import type {
+  IncomingPayload,
   OutgoingSignedEncryptedPayload,
   VerifiedChatMessage,
-  IncomingPayload,
 } from '../types/chat';
 import {
-  eccDecrypt,
+  fromHex,
   hashMessage,
-  verifySignature,
   importPublicKeyFromXY,
+  verifySignature,
 } from '../utils/crypto';
+import { decryptMessage } from '../utils/ecc-ecdh';
 import { UserApi } from './user';
+
+export interface FriendListChangedNotification {
+  type: 'friendlist_changed';
+  data: {
+    username: string;
+    friendship_id: string;
+    timestamp: number;
+  };
+}
 
 let ws: WebSocket | null = null;
 let currentUser: string | null = null;
 const listeners: ((m: VerifiedChatMessage) => void)[] = [];
+const friendListeners: ((
+  notification: FriendListChangedNotification
+) => void)[] = [];
 
 export function initChatSocket(token: string | undefined, username: string) {
   currentUser = username;
@@ -23,24 +36,35 @@ export function initChatSocket(token: string | undefined, username: string) {
   );
   ws.onmessage = async (ev) => {
     try {
-      const data: IncomingPayload = JSON.parse(ev.data);
+      const data = JSON.parse(ev.data);
+
+      if (data.type === 'friendlist_changed') {
+        friendListeners.forEach((l) => l(data));
+        return;
+      }
+
       if (!currentUser || data.receiver_username !== currentUser) return;
+      const api = new UserApi(token);
+      const pubReceiver = await api.fetchPublicKey(data.sender_username);
       const priv = localStorage.getItem('privateKey');
+      const privEcdh = localStorage.getItem('privateKeyEcdh');
       if (!priv) return;
-      const plain = await eccDecrypt(data.encrypted_message, priv);
+      const plain = await decryptMessage(
+        fromHex(privEcdh as string),
+        fromHex(pubReceiver.publicKeyHex.ecdh as string),
+        data.encrypted_message
+      );
       const recomputed = hashMessage({
-        message: plain,
+        message: plain as string,
         timestamp: data.timestamp,
         sender: data.sender_username,
         receiver: data.receiver_username,
       });
-      const api = new UserApi(token);
       const pubRes = await api.fetchPublicKey(data.sender_username);
       const x = pubRes.publicKeyHex?.x;
       const y = pubRes.publicKeyHex?.y;
       const pubKey = x && y ? await importPublicKeyFromXY(x, y) : null;
       const hashEq = recomputed === data.message_hash;
-      console.log('HASHEQ: ', hashEq);
       const sigOk = pubKey
         ? await verifySignature(
             { x: x, y: y },
@@ -49,12 +73,11 @@ export function initChatSocket(token: string | undefined, username: string) {
             data.signature.s
           )
         : false;
-      console.log('signok: ', sigOk);
       const msg: VerifiedChatMessage = {
         id: data.id ?? crypto.randomUUID(),
         sender_username: data.sender_username,
         receiver_username: data.receiver_username,
-        message: plain,
+        message: plain as string,
         timestamp: data.timestamp,
         verified: hashEq && sigOk,
       };
@@ -98,24 +121,37 @@ export async function fetchChatHistory(
   if (!res.ok) throw new Error('Failed history fetch');
   const items: IncomingPayload[] = await res.json();
   const priv = localStorage.getItem('privateKey');
+  const privEcdh = localStorage.getItem('privateKeyEcdh');
   if (!priv) return [];
   const api = new UserApi(token);
+
   const out: VerifiedChatMessage[] = [];
   for (const d of items) {
     if (d.sender_username === currentUser) {
+      const pubReceiver = await api.fetchPublicKey(d.receiver_username);
+      const plain = await decryptMessage(
+        fromHex(privEcdh as string),
+        fromHex(pubReceiver.publicKeyHex.ecdh as string),
+        d.encrypted_message
+      );
       out.push({
         id: d.id,
         sender_username: d.sender_username,
         receiver_username: d.receiver_username,
-        message: 'Encrypted message',
+        message: plain as string,
         timestamp: d.timestamp,
         verified: true,
       });
       continue;
     }
-    const plain = await eccDecrypt(d.encrypted_message, priv);
+  const pubReceiver = await api.fetchPublicKey(d.sender_username);
+  const plain = await decryptMessage(
+    fromHex(privEcdh as string),
+    fromHex(pubReceiver.publicKeyHex.ecdh as string),
+    d.encrypted_message
+  );
     const recomputed = hashMessage({
-      message: plain,
+      message: plain as string,
       timestamp: d.timestamp,
       sender: d.sender_username,
       receiver: d.receiver_username,
@@ -125,7 +161,6 @@ export async function fetchChatHistory(
     const y = pubRes.publicKeyHex?.y;
     const pubKey = x && y ? await importPublicKeyFromXY(x, y) : null;
     const hashEq = recomputed === d.message_hash;
-    console.log(hashEq);
     const sigOk = pubKey
       ? await verifySignature(
           { x: x, y: y },
@@ -138,11 +173,21 @@ export async function fetchChatHistory(
       id: d.id,
       sender_username: d.sender_username,
       receiver_username: d.receiver_username,
-      message: plain,
+      message: plain as string,
       timestamp: d.timestamp,
       verified: hashEq && sigOk,
     });
   }
 
   return out;
+}
+
+export function onFriendListChanged(
+  cb: (notification: FriendListChangedNotification) => void
+) {
+  friendListeners.push(cb);
+  return () => {
+    const i = friendListeners.indexOf(cb);
+    if (i >= 0) friendListeners.splice(i, 1);
+  };
 }

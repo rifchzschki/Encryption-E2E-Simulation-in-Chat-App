@@ -86,13 +86,13 @@ function AuthPage() {
   };
 
   return (
-    <div className="flex h-screen flex-col lg:flex-row">
-      <section className="flex items-center justify-center w-0 lg:w-3/5 bg-gray-300">
+    <div className="flex h-screen flex-row">
+      <section className="lg:flex items-center h-full justify-center hidden lg:w-3/5 bg-gray-300">
         <figure className="">
           <img src="/transparent-logo.png" alt="logo" />
         </figure>
       </section>
-      <section className="bg-blue-400 flex items-center justify-center w-full lg:w-2/5 p-6">
+      <section className="bg-blue-400 h-full flex items-center justify-center w-full lg:w-2/5 p-6">
         <Card
           sx={{
             padding: 4,

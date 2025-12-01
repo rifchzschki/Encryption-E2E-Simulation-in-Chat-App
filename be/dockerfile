@@ -16,7 +16,7 @@ RUN go install github.com/air-verse/air@latest
 COPY . .
 
 # Expose API port
-EXPOSE 9000
+EXPOSE 8080
 
 # Run using air
 CMD ["air", "-c", ".air.toml"]

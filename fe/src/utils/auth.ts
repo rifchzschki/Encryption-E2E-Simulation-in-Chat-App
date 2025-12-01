@@ -21,7 +21,6 @@ export const validateAuthForm = (
   if (!formValues.password.trim()) {
     errors.password = "Password wajib diisi";
   } else if (!isLogin) {
-    console.log(isLogin);
     const passError = validatePassword(formValues.password);
     if (formValues.password.length > 0 && passError.length > 0) {
       errors.password = "Password harus " + passError.join(", ");

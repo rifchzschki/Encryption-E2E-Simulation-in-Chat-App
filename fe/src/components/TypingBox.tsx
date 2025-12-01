@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { hashMessage, signHashHex, eccEncrypt } from '../utils/crypto'
+import { hashMessage, signHashHex, fromHex } from '../utils/crypto'
 import { sendRaw } from '../services/chatSocket'
 import type { TypingBoxProps } from '../types/chat'
+import { encryptMessage } from '../utils/ecc-ecdh';
 
 
 
@@ -13,8 +14,6 @@ export default function TypingBox({
 }: TypingBoxProps) {
   const [value, setValue] = useState('');
   const [sending, setSending] = useState(false);
-
-  
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -34,7 +33,8 @@ export default function TypingBox({
     }
     try {
       const signature = await signHashHex(pem, hash);
-      const encrypted = await eccEncrypt(value, receiverPublicKeyPem);
+      const priv = localStorage.getItem("privateKeyEcdh")
+      const encrypted = await encryptMessage(fromHex(priv as string), fromHex(receiverPublicKeyPem.ecdh as string), value)
       sendRaw({
         sender_username: me,
         receiver_username: to,

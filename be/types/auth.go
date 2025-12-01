@@ -10,6 +10,7 @@ type IdentityPayload struct{
 type PublicKey struct{
 	X string `json:"x"`
 	Y string `json:"y"`
+	Ecdh string `json:"ecdh"`
 }
 
 type LoginRequest struct {

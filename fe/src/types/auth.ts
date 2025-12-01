@@ -21,6 +21,7 @@ export type Signature = {
 export type PublicKey = {
   x: string;
   y: string;
+  ecdh?: string;
 };
 
 export type ResponseChallenge = {

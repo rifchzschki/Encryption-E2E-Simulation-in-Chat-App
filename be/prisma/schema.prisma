@@ -12,6 +12,7 @@ model User {
   username   String        @unique
   publicKeyX String
   publicKeyY String
+  publicKeyEcdh String
 
   // Friendships (symmetric)
   friendsAsUser1 UserFriend[] @relation("User1Friends")

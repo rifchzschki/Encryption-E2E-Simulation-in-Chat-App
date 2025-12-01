@@ -17,7 +17,6 @@ export default function ChatComponent() {
 
   useEffect(() => {
     if (!receiver || !token) return;
-    console.log('Fetching history for', receiver);
   }, [receiver, token]);
 
   useEffect(() => {
@@ -51,7 +50,6 @@ export default function ChatComponent() {
       .then(setHistory)
       .catch(() => setHistory([]))
       .finally(() => setLoadingHistory(false));
-    console.log(history)
     }, [receiver, token]);
 
   return (

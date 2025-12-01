@@ -5,7 +5,8 @@ import type {
   ResponseChallenge,
   Token,
 } from '../types/auth';
-import { generateKeyPair, signNonce } from '../utils/crypto';
+import { fromHex, generateKeyPair, signNonce, toHex } from '../utils/crypto';
+import { generateDeterministicIdentityKeyPair } from '../utils/ecc-ecdh';
 import { getEnv } from '../utils/env';
 import { ApiClient } from './api';
 
@@ -19,13 +20,16 @@ export class AuthService extends ApiClient {
       username,
       password
     );
+    const { publicKeyEcdh } =
+        await generateDeterministicIdentityKeyPair(fromHex(privateKeyHex));
+    const publicEcdhHex = toHex(publicKeyEcdh)
+    publicKeyHex.ecdh = publicEcdhHex
 
     return this.post<BaseResponse<string>>(
       '/register',
       { username, publicKeyHex },
       { withCredentials: true }
     ).then((res) => {
-      localStorage.setItem('privateKey', privateKeyHex);
       return res.data;
     });
   }
@@ -37,15 +41,15 @@ export class AuthService extends ApiClient {
       );
       const nonce = nonceRes.data.nonce;
       const { privateKeyHex } = await generateKeyPair(username, password);
-      const currentTime = Date.now();
       const signature = await signNonce(privateKeyHex, nonce);
-      console.log('Signing time:', Date.now() - currentTime);
+      const { privateKeyEcdh } = await generateDeterministicIdentityKeyPair(fromHex(privateKeyHex))
       return this.post<BaseResponse<AuthResponse>>(
         '/login',
         { username, signature: signature },
         { withCredentials: true }
       ).then((res) => {
         localStorage.setItem('privateKey', privateKeyHex);
+        localStorage.setItem('privateKeyEcdh', toHex(privateKeyEcdh));
         return res.data;
       });
     } catch (err) {

@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -83,6 +84,7 @@ func (a *AuthController) Login(c *gin.Context) {
 }
 func (a *AuthController) Register(c *gin.Context) {
 	var payload types.IdentityPayload
+	fmt.Println("from user service", payload.PublicKeyHex.Ecdh)
 
     if err := c.ShouldBindJSON(&payload); err != nil {
         types.FailResponse(c, http.StatusBadRequest, "Bad Request", err)
