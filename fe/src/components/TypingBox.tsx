@@ -5,6 +5,7 @@ import { sendRaw } from '../services/chatSocket';
 import type { TypingBoxProps } from '../types/chat';
 import { fromHex, hashMessage, signHashHex } from '../utils/crypto';
 import { encryptMessage } from '../utils/ecc-ecdh';
+import { useChatMetaStore } from '../stores/useChatMetadataStore';
 
 export default function TypingBox({
   me,
@@ -15,6 +16,8 @@ export default function TypingBox({
   const [value, setValue] = useState('');
   const [sending, setSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { updateMeta } = useChatMetaStore.getState();
+
 
   useEffect(() => {
     const ta = textareaRef.current;
@@ -62,6 +65,7 @@ export default function TypingBox({
         signature,
         timestamp,
       });
+      updateMeta(to, value, timestamp);
 
       onLocalAppend?.(value);
       setValue('');

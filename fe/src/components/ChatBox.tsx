@@ -4,6 +4,8 @@ import TypingBox from './TypingBox';
 import { initChatSocket, onIncomingMessage } from '../services/chatSocket';
 import type { VerifiedChatMessage, ChatBoxProps } from '../types/chat';
 import { CircularProgress, Typography } from '@mui/material';
+import { useReceiverStore } from '../stores/useReceiverStore';
+import { useChatMetaStore } from '../stores/useChatMetadataStore';
 
 export default function ChatBox({
   me,
@@ -13,6 +15,8 @@ export default function ChatBox({
   initialMessages = [],
   loadingHistory = false,
 }: ChatBoxProps) {
+  const {receiver} = useReceiverStore()
+  const {resetUnread} = useChatMetaStore()
   const [loading, setLoading] = useState(loadingHistory);
   const [messages, setMessages] =
     useState<VerifiedChatMessage[]>(initialMessages);
@@ -21,6 +25,10 @@ export default function ChatBox({
 
   useEffect(() => setMessages(initialMessages), [initialMessages]);
   useEffect(() => setLoading(loadingHistory), [loadingHistory]);
+  useEffect(() => {
+    if (!receiver) return;
+    resetUnread(receiver);
+  }, [receiver]);
 
   useEffect(() => {
     initChatSocket(token?.toString(), me);

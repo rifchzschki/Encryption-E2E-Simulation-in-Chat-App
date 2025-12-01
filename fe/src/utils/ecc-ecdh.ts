@@ -4,6 +4,8 @@ import { ecdh, weierstrass } from '@noble/curves/abstract/weierstrass.js';
 import { hkdf } from '@noble/hashes/hkdf.js';
 import { sha3_256 } from '@noble/hashes/sha3.js';
 import { fromHex, p256_CURVE, toHex } from './crypto.ts';
+import { useChatMetaStore } from '../stores/useChatMetadataStore.ts';
+import { UserApi } from '../services/user.ts';
 
 const ECDH = ecdh(weierstrass(p256_CURVE));
 const CURVE_N = p256_CURVE.n;
@@ -80,5 +82,32 @@ export async function decryptMessage(
     return new TextDecoder().decode(plaintext);
   }catch(error){
     console.error(error)
+  }
+}
+
+export async function resolveBulkMetadataEncryption(
+  token: string,
+  privEcdhHex: string
+) {
+  const { updateMeta } = useChatMetaStore.getState();
+  const api = new UserApi(token);
+
+  for (const [contact, meta] of Object.entries(
+    useChatMetaStore.getState().metas
+  )) {
+    if (!meta.latestMessage) continue;
+
+    try {
+      const pubRes = await api.fetchPublicKey(contact);
+      const plain = await decryptMessage(
+        fromHex(privEcdhHex),
+        fromHex(pubRes.publicKeyHex.ecdh as string),
+        meta.latestMessage
+      );
+
+      updateMeta(contact, plain as string, meta.latestTimestamp!);
+    } catch (e) {
+      console.error(`Decrypt failed for ${contact}`, e);
+    }
   }
 }

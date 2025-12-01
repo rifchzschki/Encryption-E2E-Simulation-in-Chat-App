@@ -32,12 +32,13 @@ func main() {
   authController := controllers.NewAuthController(userService, authService)
   socketController := controllers.NewSocketController(userService, chatService)
   userController := controllers.NewUserController(userService, chatService, socketController)
-  
+  chatController := controllers.NewChatController(chatService)
+
   port := os.Getenv("PORT")
   if port == "" {
       port = "8080"
   }
 
-  router := SetupRouter(authController,socketController,userController)
+  router := SetupRouter(authController,socketController,userController, chatController)
   router.Run(":" + port)
 }

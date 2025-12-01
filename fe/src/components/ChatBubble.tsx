@@ -26,7 +26,6 @@ export default function ChatBubble({
         isSender ? 'justify-end' : 'justify-start'
       }`}
     >
-      {/* Avatar untuk lawan bicara */}
       {!isSender && (
         <Avatar
           src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${receiver}`}
@@ -39,7 +38,6 @@ export default function ChatBubble({
       <div
         className={`flex flex-col w-full ${isSender ? 'items-end' : 'items-start'}`}
       >
-        {/* Sender name (hanya jika lawan bicara) */}
         {!isSender && sender && (
           <Typography
             variant="caption"
@@ -49,7 +47,6 @@ export default function ChatBubble({
           </Typography>
         )}
 
-        {/* Bubble */}
         <div
           className={`rounded-2xl px-4 py-2 max-w-[75%] wrap-break-word shadow-sm ${
             isSender
@@ -62,7 +59,6 @@ export default function ChatBubble({
           </span>
         </div>
 
-        {/* Timestamp + Verified status */}
         <div
           className={`flex gap-1 items-center mt-1 text-[11px] ${
             isSender

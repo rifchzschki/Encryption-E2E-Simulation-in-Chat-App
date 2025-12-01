@@ -12,3 +12,10 @@ type IncomingPayload struct {
     } `json:"signature"`
     Timestamp string `json:"timestamp"`
 }
+
+type ChatMetadata struct {
+    ContactId     string `json:"contact_id"`
+    Username      string `json:"username"`
+    LastMessage   string `json:"last_message"`
+    LastTimestamp string `json:"last_timestamp"`
+}

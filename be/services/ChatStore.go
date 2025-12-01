@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	_"time"
+	_ "time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/prisma/db"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/types"
 )
@@ -99,4 +100,41 @@ func (cs *ChatService) ListHistory(ctx context.Context, a, b string) ([]types.In
     }
 	fmt.Println("History", out)
     return out, nil
+}
+
+func (cs *ChatService) GetChatMetadata(ctx *gin.Context, userId string) ([]types.ChatMetadata, error) {
+    
+	query := `
+WITH latest AS (
+  SELECT DISTINCT ON (
+    CASE WHEN "senderId" = $1 THEN "receiverId" ELSE "senderId" END
+  )
+    id,
+    CASE WHEN "senderId" = $1 THEN "receiverId" ELSE "senderId" END AS contact_id,
+    "chipertext",
+    "timestamp"
+  FROM "messages"
+  WHERE "senderId" = $1 OR "receiverId" = $1
+  ORDER BY
+    contact_id,
+    "timestamp" DESC
+)
+
+SELECT
+  l.contact_id,
+  u.username,
+  l."chipertext" AS last_message,
+  l."timestamp" AS last_timestamp
+FROM latest l
+JOIN "users" u ON u.id = l.contact_id
+ORDER BY last_timestamp DESC;
+`
+
+    var results []types.ChatMetadata
+	err := cs.prismaClient.Prisma.QueryRaw(query, userId).Exec(ctx, &results)
+	if err != nil {
+		return nil, err
+	}
+    
+	return results, nil
 }

@@ -1,3 +1,4 @@
+import { useChatMetaStore } from '../stores/useChatMetadataStore';
 import type {
   IncomingPayload,
   OutgoingSignedEncryptedPayload,
@@ -82,6 +83,11 @@ export function initChatSocket(token: string | undefined, username: string) {
         verified: hashEq && sigOk,
       };
       listeners.forEach((l) => l(msg));
+
+      const { updateMeta } = useChatMetaStore.getState();
+      if (data.sender_username) {
+        updateMeta(data.sender_username, msg.message, msg.timestamp);
+      }
     } catch (e) {
       console.error('Bad WS message', e);
     }

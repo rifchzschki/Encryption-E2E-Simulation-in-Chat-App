@@ -1,60 +1,50 @@
-import React from 'react';
-import {
-  ListItem,
-  ListItemAvatar,
-  Avatar,
-  ListItemText,
-  Typography,
-  Divider,
-} from '@mui/material';
-import { useReceiverStore } from '../stores/useReceiverStore';
+import React, { useEffect} from 'react';
+import ContactComponent from './ContactComponent';
+import { useAuth } from '../context/AuthContext';
+import { useChatMetaStore } from '../stores/useChatMetadataStore';
+import { UserApi } from '../services/user';
+import { resolveBulkMetadataEncryption } from '../utils/ecc-ecdh';
 
 interface ContactListProps {
   contact: { id: number; username: string; };
 }
 
-
-
 export default function ContactList({
   contact,
 }: ContactListProps) {
-  const {  setReceiver } = useReceiverStore();
+   const { token } = useAuth();
+   const { setMetadataBulk } = useChatMetaStore();
+    useEffect(() => {
+      if (!token || !contact.username) return;
+      
+      const priv = localStorage.getItem("privateKeyEcdh");
+      if (!priv) return;
+      
+      async function load() {
+        try {
+          new UserApi(token)
+            .fetchChatMetadata()
+            .then((items) => {
+              setMetadataBulk(
+                items.map((it) => ({
+                  contact: it.username,
+                  latestMessage: it.last_message,
+                  latestTimestamp: it.last_timestamp,
+                  unreadCount: 0, 
+                }))
+              );
+              resolveBulkMetadataEncryption(token as string, priv as string)
+            });
+        } catch (err) {
+          console.error('Failed metadata fetch', err);
+        }
+      }
+
+      load();
+    }, [token, contact.username]);
   return (
     <React.Fragment key={contact.username}>
-      <ListItem
-        component="button"
-        className="border-b border-gray-200 p-4 hover:bg-gray-100 transition-colors duration-300 ease-in-out"
-        onClick={()=>setReceiver(contact.username)}
-      >
-        <ListItemAvatar>
-          <div className="mr-4">
-            <Avatar
-              src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${contact.username}`}
-              alt={contact.username}
-              sx={{ width: 56, height: 56 }}
-            />
-          </div>
-        </ListItemAvatar>
-        <div className="flex flex-row justify-between w-full">
-          <div className="flex flex-col">
-            <ListItemText
-              className="text-bold"
-              primary={contact.username}
-            ></ListItemText>
-            <ListItemText className="text-gray-500">Hello there</ListItemText>
-          </div>
-          <div className="flex flex-col items-end">
-            <Typography variant="caption" color="gray">
-              2:30 PM
-            </Typography>
-            <div className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs mt-1">
-              1
-            </div>
-          </div>
-        </div>
-      </ListItem>
-
-      {<Divider />}
+      <ContactComponent contact={contact}/>
     </React.Fragment>
   );
 }

@@ -1,4 +1,5 @@
 import type { PublicKey, Token } from '../types/auth';
+import type { ChatMetadataResponse } from '../types/chat';
 import { ApiClient } from './api';
 
 export class UserApi extends ApiClient {
@@ -45,6 +46,11 @@ export class UserApi extends ApiClient {
   }
   async deleteFriend(username: string, friendUsername: string): Promise<void> {
     return this.delete(`/friends/delete/${username}/${friendUsername}`, {
+      withCredentials: true,
+    });
+  }
+  async fetchChatMetadata(): Promise<ChatMetadataResponse[]> {
+    return this.get(`/chat/metadata`, {
       withCredentials: true,
     });
   }
