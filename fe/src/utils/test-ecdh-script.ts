@@ -3,9 +3,8 @@ import {
   encryptMessage,
   decryptMessage,
   deriveSharedSecret,
-  deriveSymmetricKey,
-} from './src/utils/ecc-ecdh.ts';
-import { fromHex, toHex } from './src/utils/crypto.ts';
+} from './ecc-ecdh.ts';
+import { toHex } from './crypto.ts';
 
 async function runTests() {
   console.log('=== ECC ECDH Encryption Test ===\n');
