@@ -1,4 +1,8 @@
+import { Avatar, Typography } from '@mui/material';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import type { ChatBubbleProps } from '../types/chat';
+import { useReceiverStore } from '../stores/useReceiverStore';
 
 export default function ChatBubble({
   message,
@@ -7,30 +11,73 @@ export default function ChatBubble({
   time,
   verified,
 }: ChatBubbleProps) {
+  const { receiver } = useReceiverStore();
+
+  const formattedTime =
+    time &&
+    new Date(time).toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
   return (
     <div
-      className={`flex flex-col mb-2 ${isSender ? 'items-end' : 'items-start'}`}
+      className={`flex w-full gap-2 mb-3 ${
+        isSender ? 'justify-end' : 'justify-start'
+      }`}
     >
-      {!isSender && sender && (
-        <span className="text-xs text-gray-500 mb-0.5">{sender}</span>
+      {/* Avatar untuk lawan bicara */}
+      {!isSender && (
+        <Avatar
+          src={`https://api.dicebear.com/9.x/avataaars/svg?seed=${receiver}`}
+          alt={receiver as string}
+          sx={{ width: 30, height: 30 }}
+          className="self-start mt-4"
+        />
       )}
+
       <div
-        className={`p-2 rounded-lg max-w-xs wrap-break-word ${
-          isSender ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-900'
-        }`}
+        className={`flex flex-col w-full ${isSender ? 'items-end' : 'items-start'}`}
       >
-        {message}
-      </div>
-      <div className="flex gap-2 items-center text-[10px] mt-0.5 text-gray-400">
-        {time && (
-          <span>
-            {new Date(time).toLocaleTimeString('id-ID', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-          </span>
+        {/* Sender name (hanya jika lawan bicara) */}
+        {!isSender && sender && (
+          <Typography
+            variant="caption"
+            className="font-semibold text-gray-500 ml-1 mb-1"
+          >
+            {sender}
+          </Typography>
         )}
-        <span>{verified ? '✅ Verified' : '❌ Unverified'}</span>
+
+        {/* Bubble */}
+        <div
+          className={`rounded-2xl px-4 py-2 max-w-[75%] wrap-break-word shadow-sm ${
+            isSender
+              ? 'bg-blue-600 text-white rounded-br-md'
+              : 'bg-white text-gray-900 border border-gray-200 rounded-bl-md'
+          }`}
+        >
+          <span className="text-[14px] leading-relaxed whitespace-pre-wrap">
+            {message}
+          </span>
+        </div>
+
+        {/* Timestamp + Verified status */}
+        <div
+          className={`flex gap-1 items-center mt-1 text-[11px] ${
+            isSender
+              ? 'text-blue-300 justify-end'
+              : 'text-gray-400 justify-start'
+          }`}
+        >
+          {formattedTime}
+
+          {verified ? (
+            <DoneAllIcon fontSize="inherit" className="text-blue-300" />
+          ) : (
+            <ErrorOutlineIcon fontSize="inherit" className="text-red-400" />
+          )}
+        </div>
       </div>
     </div>
   );
