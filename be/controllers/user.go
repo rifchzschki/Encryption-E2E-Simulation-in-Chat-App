@@ -65,3 +65,19 @@ func (u *UserController) CreateUser(c *gin.Context) {
         "publicKey": types.PublicKey{X: user.PublicKeyX, Y: user.PublicKeyY},
     })
 }
+
+func (u *UserController) GetAllMessages(c *gin.Context) {
+    username := c.GetString("username")
+    if username == "" {
+        c.Status(http.StatusUnauthorized)
+        return
+    }
+
+    messages, err := u.userService.GetAllMessages(c, username)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to retrieve messages"})
+        return
+    }
+
+    c.JSON(http.StatusOK, messages)
+}

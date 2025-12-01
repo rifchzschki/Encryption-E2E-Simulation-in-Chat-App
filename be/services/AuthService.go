@@ -113,5 +113,7 @@ func (as *AuthService) ProcessLogin(ctx *gin.Context, user *db.UserModel, pub ty
 		return "", "", fmt.Errorf("failed to create user session: %w", err)
 	}
 
+	fmt.Println(accessToken, refreshToken)
+
 	return accessToken, refreshToken, nil
 }

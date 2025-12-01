@@ -57,6 +57,8 @@ func (a *AuthController) Login(c *gin.Context) {
         return
     }
 
+	fmt.Println("TESTESTESTESEST")
+
 	user, err := a.userService.GetUserByUsername(c, loginPayload.Username)
 	if err != nil {
 		types.FailResponse(c, 404, "User not found", err.Error())
@@ -68,11 +70,15 @@ func (a *AuthController) Login(c *gin.Context) {
 		Y: user.PublicKeyY,
 	} 
 
+	fmt.Println("TESTESTESTESEST")
+
 	refreshToken, accessToken, err := a.authService.ProcessLogin(c, user, publicKey, loginPayload)
 	if err != nil {
 		types.FailResponse(c, 401, "Login failed", err.Error())
 		return
 	}
+	fmt.Println(accessToken, refreshToken)
+	fmt.Println("TESTESTESTESEST: ",accessToken)
 
 	c.SetCookie(
 		"refresh_token",

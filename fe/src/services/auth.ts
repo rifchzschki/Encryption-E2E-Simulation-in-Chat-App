@@ -1,5 +1,5 @@
 import type { BaseResponse } from '../types';
-import type { AuthInput, AuthResponse, CredentialInfo, ResponseChallenge } from '../types/auth';
+import type { AuthInput, AuthResponse, ResponseChallenge } from '../types/auth';
 import { generateKeyPair, signNonce } from '../utils/crypto';
 import { getEnv } from '../utils/env';
 import { ApiClient } from './api';
@@ -10,19 +10,19 @@ export class authService extends ApiClient {
   }
 
   //register
-  async register({ username, password }: AuthInput):Promise<string>{
+  async register({ username, password }: AuthInput): Promise<AuthResponse> {
     const { privateKeyHex, publicKeyHex } = await generateKeyPair(
       username,
       password
     );
 
-    return this.post<BaseResponse<string>>(
+    return this.post<BaseResponse<AuthResponse>>(
       '/register',
       { username, publicKeyHex },
       { withCredentials: true }
     ).then((res) => {
       localStorage.setItem('privateKey', privateKeyHex);
-      return res.data
+      return res.data;
     });
   }
 
@@ -40,7 +40,7 @@ export class authService extends ApiClient {
       { withCredentials: true }
     ).then((res) => {
       localStorage.setItem('privateKey', privateKeyHex);
-      return res.data
+      return res.data;
     });
   }
 }

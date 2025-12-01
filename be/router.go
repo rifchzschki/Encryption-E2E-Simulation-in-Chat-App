@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/controllers"
 	"github.com/rifchzschki/Encryption-E2E-Simulation-in-Chat-App/middleware"
-	
 )	
 
 func SetupRouter(
@@ -40,6 +39,7 @@ func SetupRouter(
 		protected.GET("/ws/chat", socketController.ChatWS)
 		protected.GET("/history/:username_receiver", userController.ChatHistoryHandler)
 		protected.GET("/users/:username/public-key", userController.GetPublicKey)
+		protected.GET("/users/:username", userController.GetAllMessages)
 	}
 
 	return router

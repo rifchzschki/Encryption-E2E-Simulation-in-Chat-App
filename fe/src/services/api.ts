@@ -1,30 +1,27 @@
-import axios from "axios";
-import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import axios from 'axios';
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 export abstract class ApiClient {
   protected readonly client: AxiosInstance;
+  protected token: string | null;
 
-  constructor(
-    baseURL: string,
-  ) {
+  constructor(baseURL: string, token?: string) {
     this.client = axios.create({
       baseURL,
       timeout: 5000, // default timeout
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     });
-
+    this.token = token || null;
     this.setupInterceptors();
   }
 
-
   private setupInterceptors() {
-    const token = localStorage.getItem("access_token");
     this.client.interceptors.request.use(
       (config) => {
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        if (this.token) {
+          config.headers.Authorization = `Bearer ${this.token}`;
         }
         return config;
       },
@@ -38,7 +35,7 @@ export abstract class ApiClient {
         // if (error.response?.status === 401) { ... retry logic }
 
         const normalized = new Error(
-          error.response?.data?.message || error.message || "Request failed"
+          error.response?.data?.message || error.message || 'Request failed'
         );
         return Promise.reject(normalized);
       }
@@ -65,9 +62,10 @@ export abstract class ApiClient {
     return (await this.client.put<T>(url, body, config)).data;
   }
 
-  protected async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
+  protected async delete<T>(
+    url: string,
+    config?: AxiosRequestConfig
+  ): Promise<T> {
     return (await this.client.delete<T>(url, config)).data;
   }
 }
-
-
