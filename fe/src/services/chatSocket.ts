@@ -6,6 +6,7 @@ import type {
 } from '../types/chat';
 import {
   fromHex,
+  generatePubFromPrivKey,
   hashMessage,
   importPublicKeyFromXY,
   verifySignature,
@@ -140,22 +141,41 @@ export async function fetchChatHistory(
         fromHex(pubReceiver.publicKeyHex.ecdh as string),
         d.encrypted_message
       );
+      const pubSign = await generatePubFromPrivKey(priv as string);
+      const x = pubSign.x;
+      const y = pubSign.y;
+      const pubKey = x && y ? await importPublicKeyFromXY(x, y) : null;
+      const recomputed = hashMessage({
+        message: plain as string,
+        timestamp: d.timestamp,
+        sender: d.sender_username,
+        receiver: d.receiver_username,
+      });
+      const hashEq = recomputed === d.message_hash;
+      const sigOk = pubKey
+        ? await verifySignature(
+            { x: x, y: y },
+            d.message_hash,
+            d.signature.r,
+            d.signature.s
+          )
+        : false;
       out.push({
         id: d.id,
         sender_username: d.sender_username,
         receiver_username: d.receiver_username,
         message: plain as string,
         timestamp: d.timestamp,
-        verified: true,
+        verified: hashEq && sigOk,
       });
       continue;
     }
-  const pubReceiver = await api.fetchPublicKey(d.sender_username);
-  const plain = await decryptMessage(
-    fromHex(privEcdh as string),
-    fromHex(pubReceiver.publicKeyHex.ecdh as string),
-    d.encrypted_message
-  );
+    const pubReceiver = await api.fetchPublicKey(d.sender_username);
+    const plain = await decryptMessage(
+      fromHex(privEcdh as string),
+      fromHex(pubReceiver.publicKeyHex.ecdh as string),
+      d.encrypted_message
+    );
     const recomputed = hashMessage({
       message: plain as string,
       timestamp: d.timestamp,
